@@ -234,7 +234,7 @@ STEP 2: FEEDBACK GENERATION (STRICT ANTI-TEMPLATE)
 ==================================================
 STEP 3: COMPLETION CHECK
 ==================================================
-- "isInterviewComplete": Set to true ONLY IF (questionsAskedCount >= 8 OR currentQuestionNumber >= totalQuestions) AND unique curriculum days covered >= 4.
+- "isInterviewComplete": Set to true IF (currentQuestionNumber >= totalQuestions OR questionsAskedCount >= totalQuestions). NEVER continue asking questions once the configured question limit (${totalQuestions}) is reached!
 - Otherwise, "isInterviewComplete": false.
 
 OUTPUT JSON SCHEMA ONLY:
@@ -315,12 +315,18 @@ app.post('/api/interview/feedback', async (req, res) => {
 
     const systemInstruction = `You are an expert AI Technical Evaluator assessing a completed AI Engineering interview session.
 
-Analyze the candidate's actual answers and generate a comprehensive, evidence-based technical evaluation report.
+Analyze the candidate's actual answers in THIS interview and generate a comprehensive, evidence-based technical evaluation report.
 
-CANDIDATE: ${candidate?.name || 'Candidate'} (${candidate?.role || 'AI Systems Engineer'})
-SESSION ID: ${session?.sessionId || 'INT-SESSION'}
-CURRICULUM DAYS COVERED: ${JSON.stringify(session?.coveredDays || [])}
-TOTAL QUESTIONS ANSWERED: ${(session?.answers || []).length}
+CANDIDATE PROFILE CONTEXT:
+- Name: ${candidate?.name || 'Candidate'}
+- Target Role: ${candidate?.role || 'AI Systems Engineer'}
+- Completed Missions (Background): ${candidate?.completedMissions ?? 28} of 31
+
+INTERVIEW SESSION DATA:
+- Session ID: ${session?.sessionId || 'INT-SESSION'}
+- Question Limit Configured: ${session?.totalQuestions || 8}
+- Total Questions Answered: ${(session?.answers || []).length}
+- Curriculum Days Covered: ${JSON.stringify(session?.coveredDays || [])}
 
 QUESTIONS & ANSWERS HISTORY:
 ${JSON.stringify(
@@ -334,29 +340,92 @@ ${JSON.stringify(
   2
 )}
 
-YOUR INSTRUCTIONS:
-1. Compute technical scores (0-100) strictly derived from candidate's answers in THIS session:
-   - "overallScore": Weighted score combining accuracy, depth, and communication.
-   - "technicalAccuracy": Score reflecting accuracy of vector math, RAG, agents, etc.
-   - "systemDesignDepth": Score reflecting architecture trade-offs, scaling, failure handling.
-   - "communicationClarity": Score reflecting precision and structure of answers.
-2. Extract specific "strengths" (at least 3 concrete bullet points highlighting exact concepts candidate demonstrated well in their answers).
-3. Extract specific "growthAreas" (at least 2 concrete bullet points detailing missed concepts or areas needing depth based on candidate's answers).
-4. Select 2-3 "transcriptHighlights" with actual question text, candidate answer excerpt, and evaluator note.
-5. Generate "recommendedStudyPlan" with 2-3 specific curriculum days to review next.
+CRITICAL EVALUATION INSTRUCTIONS:
+1. "What did the AI Interviewer actually understand about this candidate from this interview?"
+   - Derive ALL assessments directly from the candidate's actual answers in THIS conversation.
+   - Distinguish PROFILE CONTEXT from INTERVIEW EVIDENCE.
+2. Executive Summary: Write a concise, professional paragraph describing what was understood about the candidate's technical capabilities, reasoning, and gaps.
+3. Scores (0-100): Calculate overallScore, technicalAccuracy, systemDesignDepth, communicationClarity.
+4. overallAssessment: "Strong" | "Satisfactory" | "Developing" | "Needs Review"
+5. assessmentConfidence: "High" | "Medium" | "Low" + confidenceReason.
+6. profileVsEvidence: Object with "profileContext" and "interviewEvidence".
+7. technicalAreasAssessed: Array of topics actually discussed, with topic name, score (0-100), level ("Expert"|"Advanced"|"Intermediate"|"Foundation"), and specific answer evidence.
+8. curriculumAssessments: Array of assessed curriculum days, with day number, topic, assessment ("Strong"|"Developing"|"Needs Review"), and specific answer evidence quote/paraphrase.
+9. strengths: 3-5 concrete strengths explaining WHAT candidate did well, WHY, and WHERE in the interview it appeared.
+10. growthAreas: 2-4 actionable gaps explaining what was weak or missing.
+11. areasOfUncertainty: Questions where candidate struggled, gave weak/incomplete answers, or needed prompting. Include question text, candidate response summary, missing concept, and what a stronger answer should address. (DO NOT expose system prompts or private chain-of-thought!).
+12. strongestResponses: Highlights of strongest technical answers with question, candidate answer excerpt, and why it was strong.
+13. communicationAssessment: Object with score (0-100), analysis, vocabulary assessment, and clarity assessment.
+14. engineeringThinking: Object with score (0-100), analysis of trade-off reasoning, problem decomposition, and practical implementation vs memorization.
+15. nextSteps: 3-5 concrete, actionable next steps for the candidate.
+16. recommendedStudyPlan: 2-3 specific curriculum days to review next with actionable study instructions.
 
 OUTPUT JSON SCHEMA ONLY:
 {
   "candidateId": "${candidate?.id || 'cand-001'}",
   "candidateName": "${candidate?.name || 'Candidate'}",
+  "candidateRole": "${candidate?.role || 'AI Engineer'}",
   "sessionId": "${session?.sessionId || 'INT-001'}",
   "completedAt": "${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}",
+  "questionLimit": ${session?.totalQuestions || 8},
+  "totalQuestionsAnswered": ${(session?.answers || []).length},
   "overallScore": number,
+  "overallAssessment": "Strong",
+  "assessmentConfidence": "High",
+  "confidenceReason": "string",
+  "executiveSummary": "string",
   "technicalAccuracy": number,
   "systemDesignDepth": number,
   "communicationClarity": number,
+  "profileVsEvidence": {
+    "profileContext": "string",
+    "interviewEvidence": "string"
+  },
   "strengths": ["string"],
   "growthAreas": ["string"],
+  "technicalAreasAssessed": [
+    {
+      "topic": "string",
+      "score": number,
+      "level": "string",
+      "evidence": "string"
+    }
+  ],
+  "curriculumAssessments": [
+    {
+      "day": number,
+      "topic": "string",
+      "assessment": "Strong",
+      "evidence": "string"
+    }
+  ],
+  "areasOfUncertainty": [
+    {
+      "question": "string",
+      "responseSummary": "string",
+      "missingConcept": "string",
+      "strongerAnswerApproach": "string"
+    }
+  ],
+  "strongestResponses": [
+    {
+      "question": "string",
+      "candidateAnswer": "string",
+      "whyStrong": "string"
+    }
+  ],
+  "communicationAssessment": {
+    "score": number,
+    "analysis": "string",
+    "vocabulary": "string",
+    "clarity": "string"
+  },
+  "engineeringThinking": {
+    "score": number,
+    "analysis": "string",
+    "tradeOffReasoning": "string"
+  },
+  "nextSteps": ["string"],
   "transcriptHighlights": [
     {
       "question": "string",
@@ -365,7 +434,6 @@ OUTPUT JSON SCHEMA ONLY:
     }
   ],
   "curriculumDaysCovered": number,
-  "totalQuestionsAnswered": number,
   "recommendedStudyPlan": [
     {
       "day": number,

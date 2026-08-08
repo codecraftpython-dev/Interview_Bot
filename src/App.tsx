@@ -5,9 +5,6 @@
 
 import { useState, useEffect } from 'react';
 import { AppShell } from './components/layout/AppShell';
-import { LoginScreen } from './components/auth/LoginScreen';
-import { SignUpScreen } from './components/auth/SignUpScreen';
-import { LandingPage } from './components/landing/LandingPage';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { InterviewScreen } from './components/interview/InterviewScreen';
 import { CandidatesView } from './components/candidates/CandidatesView';
@@ -29,21 +26,7 @@ import {
   CompletedSessionRecord 
 } from './types';
 
-type AuthView = 'landing' | 'login' | 'signup';
-
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('interview_agent_auth') === 'true';
-  });
-
-  const [authView, setAuthView] = useState<AuthView>(() => {
-    const path = window.location.pathname.toLowerCase();
-    const hash = window.location.hash.toLowerCase();
-    if (path === '/login' || hash === '#login') return 'login';
-    if (path === '/signup' || hash === '#signup') return 'signup';
-    return 'landing';
-  });
-
   const [settings, setSettings] = useState<InterviewSettings>(() => {
     try {
       const saved = localStorage.getItem('interview_agent_settings');
@@ -66,7 +49,14 @@ export default function App() {
     return completedSessions[0]?.sessionId;
   });
 
-  const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
+  const [currentTab, setCurrentTab] = useState<NavTab>(() => {
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    if (['dashboard', 'interviews', 'candidates', 'feedback', 'settings'].includes(hash)) {
+      return hash as NavTab;
+    }
+    return 'dashboard';
+  });
+
   const [activeCandidate, setActiveCandidate] = useState<Candidate>(sampleCandidate);
   const [interviewState, setInterviewState] = useState<InterviewState>(() => createNewInterviewSession(sampleCandidate, settings));
 
@@ -77,18 +67,10 @@ export default function App() {
     }
   }, [activeCandidate.id, settings]);
 
-  // Keep window hash synced for browser URL simulation
+  // Keep window hash synced for tab routing
   useEffect(() => {
-    if (!isAuthenticated) {
-      if (authView === 'login') {
-        window.history.replaceState(null, '', '#login');
-      } else if (authView === 'signup') {
-        window.history.replaceState(null, '', '#signup');
-      } else {
-        window.history.replaceState(null, '', '#');
-      }
-    }
-  }, [authView, isAuthenticated]);
+    window.history.replaceState(null, '', `#${currentTab}`);
+  }, [currentTab]);
 
   const handleUpdateSettings = (newSettings: InterviewSettings) => {
     setSettings(newSettings);
@@ -97,20 +79,6 @@ export default function App() {
     } catch (e) {
       console.error('Failed to save settings:', e);
     }
-  };
-
-  const handleLoginSuccess = () => {
-    localStorage.setItem('interview_agent_auth', 'true');
-    setIsAuthenticated(true);
-    setCurrentTab('dashboard');
-    window.history.replaceState(null, '', '#dashboard');
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('interview_agent_auth');
-    setIsAuthenticated(false);
-    setAuthView('landing');
-    window.history.replaceState(null, '', '#');
   };
 
   const handleStartInterview = () => {
@@ -177,43 +145,11 @@ export default function App() {
     completedSessions[0] ||
     null;
 
-  // Render Public Authentication Flow when unauthenticated
-  if (!isAuthenticated) {
-    if (authView === 'login') {
-      return (
-        <LoginScreen
-          onLoginSuccess={handleLoginSuccess}
-          onNavigateToSignUp={() => setAuthView('signup')}
-          onNavigateToHome={() => setAuthView('landing')}
-        />
-      );
-    }
-
-    if (authView === 'signup') {
-      return (
-        <SignUpScreen
-          onSignUpSuccess={handleLoginSuccess}
-          onNavigateToLogin={() => setAuthView('login')}
-          onNavigateToHome={() => setAuthView('landing')}
-        />
-      );
-    }
-
-    return (
-      <LandingPage
-        onNavigateToLogin={() => setAuthView('login')}
-        onNavigateToSignUp={() => setAuthView('signup')}
-      />
-    );
-  }
-
-  // Render Protected Application Shell when authenticated
   return (
     <AppShell
       currentTab={currentTab}
       onTabChange={setCurrentTab}
       isInterviewActive={currentTab === 'interviews'}
-      onLogout={handleLogout}
     >
       {currentTab === 'dashboard' && (
         <Dashboard

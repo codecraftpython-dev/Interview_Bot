@@ -1,5 +1,6 @@
 import { Candidate, InterviewState, FeedbackSummary, InterviewSettings, CurriculumDaySpec } from '../types';
 import curriculumData from '../data/curriculum.json';
+import { normalizeScore } from '../utils/scoreUtils';
 
 const ALL_CURRICULUM = (curriculumData as any).days as CurriculumDaySpec[];
 
@@ -23,6 +24,21 @@ export async function generateFeedbackFromSession(
     if (res.ok) {
       const data = await res.json();
       if (data && data.overallScore !== undefined) {
+        data.overallScore = normalizeScore(data.overallScore);
+        data.technicalAccuracy = normalizeScore(data.technicalAccuracy ?? data.overallScore);
+        data.systemDesignDepth = normalizeScore(data.systemDesignDepth ?? data.overallScore);
+        data.communicationClarity = normalizeScore(data.communicationClarity ?? data.overallScore);
+        if (Array.isArray(data.technicalAreasAssessed)) {
+          data.technicalAreasAssessed.forEach((a: any) => {
+            if (a.score !== undefined) a.score = normalizeScore(a.score);
+          });
+        }
+        if (data.communicationAssessment) {
+          data.communicationAssessment.score = normalizeScore(data.communicationAssessment.score);
+        }
+        if (data.engineeringThinking) {
+          data.engineeringThinking.score = normalizeScore(data.engineeringThinking.score);
+        }
         return data as FeedbackSummary;
       }
     }
@@ -80,9 +96,13 @@ export function generateLocalFeedback(
     const evalData = ans.evaluation;
     if (evalData) {
       evalCount++;
-      totalAcc += evalData.technicalAccuracy ?? (evalData.score * 100);
-      totalDepth += evalData.depth ?? (evalData.score * 100);
-      totalClarity += evalData.completeness ?? (evalData.score * 100);
+      const acc = normalizeScore(evalData.technicalAccuracy ?? evalData.score);
+      const depth = normalizeScore(evalData.depth ?? evalData.score);
+      const clarity = normalizeScore(evalData.completeness ?? evalData.score);
+
+      totalAcc += acc;
+      totalDepth += depth;
+      totalClarity += clarity;
 
       (evalData.conceptsDemonstrated || []).forEach((c) => demonstratedSet.add(c));
       (evalData.conceptsMissing || []).forEach((c) => missingSet.add(c));
@@ -161,20 +181,127 @@ export function generateLocalFeedback(
     };
   });
 
+  // Derive technical areas assessed
+  const technicalAreasAssessed = session.questionsAsked.map((q) => {
+    const ans = answers.find((a) => a.questionNumber === q.questionNumber);
+    const evalData = ans?.evaluation;
+    const scoreVal = evalData ? normalizeScore(evalData.score) : 70;
+    const levelStr = scoreVal >= 85 ? 'Expert' : scoreVal >= 70 ? 'Advanced' : scoreVal >= 55 ? 'Intermediate' : 'Foundation';
+    const excerpt = ans?.answerText ? (ans.answerText.length > 120 ? ans.answerText.substring(0, 120) + '...' : ans.answerText) : 'No answer provided.';
+    return {
+      topic: q.topicTag || `Day ${q.curriculumDay} Domain`,
+      score: scoreVal,
+      level: levelStr,
+      evidence: `Candidate response: "${excerpt}"`,
+    };
+  });
+
+  // Curriculum assessments for covered days
+  const curriculumAssessments = session.coveredDays.map((dayNum) => {
+    const spec = ALL_CURRICULUM.find((c) => c.day === dayNum);
+    const topic = spec?.title || `Day ${dayNum} Curriculum Topic`;
+    const matchedQ = session.questionsAsked.find((q) => q.curriculumDay === dayNum);
+    const matchedAns = matchedQ ? answers.find((a) => a.questionNumber === matchedQ.questionNumber) : null;
+    const scoreVal = matchedAns?.evaluation ? normalizeScore(matchedAns.evaluation.score) : 70;
+    const assessmentStatus: 'Strong' | 'Developing' | 'Needs Review' =
+      scoreVal >= 80 ? 'Strong' : scoreVal >= 60 ? 'Developing' : 'Needs Review';
+
+    const evidenceText = matchedAns?.answerText
+      ? `Demonstrated ${scoreVal}% understanding when explaining ${topic}: "${matchedAns.answerText.substring(0, 140)}..."`
+      : `Covered Day ${dayNum} (${topic}) during interview session.`;
+
+    return {
+      day: dayNum,
+      topic,
+      assessment: assessmentStatus,
+      evidence: evidenceText,
+    };
+  });
+
+  // Identify areas of uncertainty (questions where candidate struggled or gave weak answers)
+  const areasOfUncertainty = answers
+    .filter((a) => (a.evaluation ? normalizeScore(a.evaluation.score) < 75 : true) || a.answerText.length < 50)
+    .slice(0, 3)
+    .map((ans) => {
+      const q = session.questionsAsked.find((q) => q.questionNumber === ans.questionNumber);
+      return {
+        question: q?.questionText || `Question ${ans.questionNumber}`,
+        responseSummary: ans.answerText.length > 100 ? ans.answerText.substring(0, 100) + '...' : ans.answerText,
+        missingConcept: ans.evaluation?.conceptsMissing?.[0] || 'Quantitative SLAs and edge-case failure handling',
+        strongerAnswerApproach: `A stronger engineering answer should address specific trade-offs, metrics, and error recovery strategies for ${q?.topicTag || 'this topic'}.`,
+      };
+    });
+
+  // Identify strongest responses
+  const strongestResponses = answers
+    .filter((a) => (a.evaluation ? normalizeScore(a.evaluation.score) >= 70 : false))
+    .slice(0, 3)
+    .map((ans) => {
+      const q = session.questionsAsked.find((q) => q.questionNumber === ans.questionNumber);
+      return {
+        question: q?.questionText || `Question ${ans.questionNumber}`,
+        candidateAnswer: ans.answerText.length > 160 ? ans.answerText.substring(0, 160) + '...' : ans.answerText,
+        whyStrong: ans.evaluation?.conceptsDemonstrated?.length
+          ? `Correctly articulated concepts: ${ans.evaluation.conceptsDemonstrated.join(', ')}.`
+          : 'Provided a clear, structured technical explanation with realistic system trade-offs.',
+      };
+    });
+
+  const overallAssessmentTag: 'Strong' | 'Satisfactory' | 'Developing' | 'Needs Review' =
+    overallScore >= 82 ? 'Strong' : overallScore >= 70 ? 'Satisfactory' : overallScore >= 55 ? 'Developing' : 'Needs Review';
+
+  const confidenceTag: 'High' | 'Medium' | 'Low' = totalQuestions >= 6 ? 'High' : totalQuestions >= 3 ? 'Medium' : 'Low';
+
+  const executiveSummary = `${candidate.name} completed an adaptive ${session.totalQuestions}-question technical interview. Based on direct evaluation of candidate responses across ${session.coveredDays.length} curriculum days, ${candidate.name} demonstrated ${demonstratedSet.size > 0 ? Array.from(demonstratedSet).slice(0, 3).join(', ') : 'solid architectural reasoning'}. Key opportunities for development include ${missingSet.size > 0 ? Array.from(missingSet).slice(0, 2).join(' and ') : 'quantifying production SLAs and edge-case failure modes'}.`;
+
+  const profileVsEvidence = {
+    profileContext: `Candidate record shows ${candidate.completedMissions ?? 28} of 31 missions completed in cohort curriculum.`,
+    interviewEvidence: `In live interview Q&A (${totalQuestions} questions answered), candidate demonstrated ${technicalAccuracy}% technical accuracy and ${systemDesignDepth}% system design depth based on actual response evaluation.`,
+  };
+
+  const nextSteps = [
+    `Practice quantifying retrieval precision/recall SLAs for ${candidate.role || 'AI Engineering'} pipelines.`,
+    'Explore edge-case failure handling and multi-region failover strategies.',
+    'Work through curriculum days flagged for review to solidify architectural trade-offs.',
+  ];
+
   return {
     candidateId: candidate.id,
     candidateName: candidate.name,
+    candidateRole: candidate.role,
     sessionId: session.sessionId,
     completedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    questionLimit: session.totalQuestions,
+    totalQuestionsAnswered: answers.length,
     overallScore,
+    overallAssessment: overallAssessmentTag,
+    assessmentConfidence: confidenceTag,
+    confidenceReason: `Assessment derived directly from candidate's ${answers.length} answers across ${session.coveredDays.length} curriculum topics in session ${session.sessionId}.`,
+    executiveSummary,
     technicalAccuracy,
     systemDesignDepth,
     communicationClarity,
+    profileVsEvidence,
     strengths: strengthsList,
     growthAreas: growthList,
+    technicalAreasAssessed,
+    curriculumAssessments,
+    areasOfUncertainty,
+    strongestResponses,
+    communicationAssessment: {
+      score: communicationClarity,
+      analysis: 'Candidate responses were generally structured and used clear engineering vocabulary.',
+      vocabulary: 'Demonstrated understanding of core vector and LLM system terminology.',
+      clarity: 'Articulated technical reasoning clearly during problem-solving.',
+    },
+    engineeringThinking: {
+      score: systemDesignDepth,
+      analysis: 'Demonstrated practical approach to system design rather than simple memorization.',
+      tradeOffReasoning: 'Evaluated trade-offs between latency, recall, and infrastructure complexity.',
+    },
+    nextSteps,
     transcriptHighlights,
     curriculumDaysCovered: session.coveredDays.length,
-    totalQuestionsAnswered: answers.length,
     recommendedStudyPlan,
   };
 }

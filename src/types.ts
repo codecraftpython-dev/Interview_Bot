@@ -14,7 +14,7 @@ export const DEFAULT_INTERVIEW_SETTINGS: InterviewSettings = {
   persona: 'Senior AI Systems Architect',
   interviewMode: 'adaptive',
   difficultyBehavior: 'adaptive',
-  questionCount: 10,
+  questionCount: 8,
   followUpIntensity: 'balanced',
   coverageStrategy: 'balanced',
   autoProbeSkipped: true,
@@ -188,21 +188,66 @@ export interface InterviewState {
 export interface FeedbackSummary {
   candidateId: string;
   candidateName: string;
+  candidateRole?: string;
   sessionId?: string;
   completedAt?: string;
+  questionLimit?: number;
+  totalQuestionsAnswered?: number;
   overallScore: number;
+  overallAssessment?: 'Strong' | 'Satisfactory' | 'Developing' | 'Needs Review';
+  assessmentConfidence?: 'High' | 'Medium' | 'Low';
+  confidenceReason?: string;
+  executiveSummary?: string;
   technicalAccuracy: number;
   systemDesignDepth: number;
   communicationClarity: number;
+  profileVsEvidence?: {
+    profileContext: string;
+    interviewEvidence: string;
+  };
   strengths: string[];
   growthAreas: string[];
+  technicalAreasAssessed?: {
+    topic: string;
+    score: number;
+    level: string;
+    evidence: string;
+  }[];
+  curriculumAssessments?: {
+    day: number;
+    topic: string;
+    assessment: 'Strong' | 'Developing' | 'Needs Review';
+    evidence: string;
+  }[];
+  areasOfUncertainty?: {
+    question: string;
+    responseSummary: string;
+    missingConcept: string;
+    strongerAnswerApproach: string;
+  }[];
+  strongestResponses?: {
+    question: string;
+    candidateAnswer: string;
+    whyStrong: string;
+  }[];
+  communicationAssessment?: {
+    score: number;
+    analysis: string;
+    vocabulary: string;
+    clarity: string;
+  };
+  engineeringThinking?: {
+    score: number;
+    analysis: string;
+    tradeOffReasoning: string;
+  };
+  nextSteps?: string[];
   transcriptHighlights: {
     question: string;
     candidateAnswer: string;
     evalNote: string;
   }[];
   curriculumDaysCovered?: number;
-  totalQuestionsAnswered?: number;
   recommendedStudyPlan?: {
     day: number;
     topic: string;

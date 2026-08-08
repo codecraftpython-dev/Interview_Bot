@@ -9,6 +9,7 @@ import {
   CurriculumDaySpec,
 } from '../types';
 import curriculumData from '../data/curriculum.json';
+import { normalizeScore } from '../utils/scoreUtils';
 
 const ALL_CURRICULUM = (curriculumData as any).days as CurriculumDaySpec[];
 
@@ -313,6 +314,18 @@ export async function processCandidateAnswer(
     followUpSuggestions = [],
   } = apiResult;
 
+  // Canonicalize evaluation scores to 0-100 scale
+  if (evaluation) {
+    evaluation = {
+      ...evaluation,
+      score: normalizeScore(evaluation.score),
+      technicalAccuracy: normalizeScore(evaluation.technicalAccuracy ?? evaluation.score),
+      depth: normalizeScore(evaluation.depth ?? evaluation.score),
+      reasoning: normalizeScore(evaluation.reasoning ?? evaluation.score),
+      completeness: normalizeScore(evaluation.completeness ?? evaluation.score),
+    };
+  }
+
   // SAFETY ENFORCER:
   // If currentQuestionAttempts >= 2, or if nextQuestionNumber <= qNum when advancing is required, force advance!
   if (currentQuestionAttempts >= 2 && (!isRelevantAnswer || nextQuestionNumber <= qNum)) {
@@ -350,11 +363,12 @@ export async function processCandidateAnswer(
     new Set([...currentState.coveredDays, ...(isRelevantAnswer ? [nextCurriculumDay] : [])])
   );
 
-  // Completion Check Rules (Enforces minimum 8 questions AND minimum 4 curriculum days)
+  // Completion Check Rules: Enforce strict configured question limit (e.g. 8, 10, or 12 questions)
   const isLastQuestion =
-    (nextQuestionNumber > currentState.totalQuestions || currentState.questionsAsked.length >= currentState.totalQuestions) &&
-    currentState.questionsAsked.length >= 8 &&
-    updatedCoveredDays.length >= 4;
+    qNum >= currentState.totalQuestions ||
+    currentState.questionsAsked.length >= currentState.totalQuestions ||
+    nextQuestionNumber > currentState.totalQuestions ||
+    apiResult?.isInterviewComplete === true;
 
   let fullAiText = '';
   if (!isRelevantAnswer) {
@@ -562,11 +576,11 @@ function evaluateAnswerLocally(
   }
 
   const evalObj: AnswerEvaluation = {
-    score,
-    technicalAccuracy: score,
-    depth: score > 0.7 ? 0.8 : 0.5,
-    reasoning: score > 0.7 ? 0.85 : 0.6,
-    completeness: score > 0.7 ? 0.8 : 0.5,
+    score: normalizeScore(score),
+    technicalAccuracy: normalizeScore(score),
+    depth: normalizeScore(score > 0.7 ? 0.8 : 0.5),
+    reasoning: normalizeScore(score > 0.7 ? 0.85 : 0.6),
+    completeness: normalizeScore(score > 0.7 ? 0.8 : 0.5),
     conceptsDemonstrated,
     conceptsMissing,
     misconceptions: [],
@@ -587,9 +601,9 @@ function evaluateAnswerLocally(
   }
 
   const isInterviewComplete =
-    (nextData.nextQNum > currentState.totalQuestions || currentState.questionsAsked.length >= currentState.totalQuestions) &&
-    currentState.questionsAsked.length >= 8 &&
-    currentState.coveredDays.length >= 4;
+    qNum >= currentState.totalQuestions ||
+    nextData.nextQNum > currentState.totalQuestions ||
+    currentState.questionsAsked.length >= currentState.totalQuestions;
 
   return {
     isRelevantAnswer: true,
