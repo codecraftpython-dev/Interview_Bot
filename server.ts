@@ -158,6 +158,7 @@ app.post('/api/interview/generate', async (req, res) => {
       candidateAnswer,
       coveredDays = [],
       questionsAskedCount = 1,
+      currentQuestionAttempts = 1,
       conversationHistory = [],
       availableCurriculum = [],
     } = req.body;
@@ -174,66 +175,67 @@ app.post('/api/interview/generate', async (req, res) => {
     const followUpIntensity = settings.followUpIntensity || 'balanced';
     const coverageStrategy = settings.coverageStrategy || 'balanced';
 
-    const systemInstruction = `You are 'InterviewForge', a premier AI technical interviewer for Enterprise AI Systems Engineering.
+    const systemInstruction = `You are 'InterviewForge', an adaptive AI technical interviewer conducting a live technical interview for Enterprise AI Systems Engineering.
 
 INTERVIEWER PERSONA & SETTINGS:
 - Persona: ${personaName}
-- Mode: ${interviewMode}
-- Follow-up Probing Intensity: ${followUpIntensity}
+- Interview Mode: ${interviewMode}
+- Probing Intensity: ${followUpIntensity}
 - Coverage Strategy: ${coverageStrategy}
 
-CANDIDATE CONTEXT:
-Name: ${candidate?.name || 'Candidate'}
-Role: ${candidate?.role || 'AI Systems Engineer'}
-Strong Areas: ${JSON.stringify(candidate?.strongAreas || [])}
-Areas to Probe: ${JSON.stringify(candidate?.areasToProbe || [])}
-Skipped Topics: ${JSON.stringify(candidate?.skippedTopics || [])}
+CANDIDATE PROFILE:
+- ID: ${candidate?.id || 'cand-001'}
+- Name: ${candidate?.name || 'Candidate'}
+- Role: ${candidate?.role || 'AI Systems Engineer'}
+- Years Experience: ${candidate?.rawRecord?.member?.yearsExperience || candidate?.experience || '5 years'}
+- Education: ${candidate?.rawRecord?.member?.education || 'BS Computer Science'}
+- Completed Missions Count: ${candidate?.completedMissions ?? 28} of 31
+- Strong Areas: ${JSON.stringify(candidate?.strongAreas || [])}
+- Areas Needing Probing: ${JSON.stringify(candidate?.areasToProbe || [])}
+- Skipped Topics: ${JSON.stringify(candidate?.skippedTopics || [])}
 
-CURRENT INTERVIEW STATUS:
-Question Number: ${currentQuestionNumber} of ${totalQuestions}
-Questions Asked So Far: ${questionsAskedCount}
-Curriculum Days Covered So Far: ${JSON.stringify(coveredDays)} (Minimum required before completion: 4 distinct days)
-Current Question Asked: "${currentQuestion}"
-Current Topic: Day ${currentCurriculumDay} - ${currentTopic} (${currentCategory})
-Current Difficulty: ${currentDifficulty}
+ACTIVE INTERVIEW CONTEXT:
+- Current Question Number: ${currentQuestionNumber} of ${totalQuestions}
+- Current Attempt for Question ${currentQuestionNumber}: Attempt ${currentQuestionAttempts} of 2 (Max 1 follow-up / clarification permitted per primary question)
+- Questions Asked So Far in Session: ${questionsAskedCount}
+- Curriculum Days Covered So Far: ${JSON.stringify(coveredDays)} (Minimum 4 distinct curriculum days MUST be covered across session)
+- Current Active Question Prompt: "${currentQuestion}"
+- Current Topic: Day ${currentCurriculumDay} - ${currentTopic} (${currentCategory})
+- Current Difficulty Level: ${currentDifficulty}
 
 AVAILABLE CURRICULUM DAYS:
 ${JSON.stringify(availableCurriculum, null, 2)}
 
-YOUR INSTRUCTIONS:
-1. EVALUATE LATEST CANDIDATE ANSWER: "${candidateAnswer}"
-   - If greeting ("hi", "hello"), filler, or non-technical ("idk"):
-     - "answerQuality": "non_responsive" or "weak"
-     - "score": 0.05
-     - "isRelevantAnswer": false
-     - "recommendedAction": "clarify"
-     - "feedback": Politely state that to evaluate technical depth for Question ${currentQuestionNumber}, they need to address the specific question asked. DO NOT praise them.
-     - Keep question number at ${currentQuestionNumber}, question text as "${currentQuestion}", same curriculum day.
-   - If technical explanation:
-     - "isRelevantAnswer": true
-     - Calculate "score" (0.0 to 1.0) based on accuracy, depth, reasoning, completeness.
-     - Extract "conceptsDemonstrated", "conceptsMissing", "misconceptions".
-     - Set "answerQuality": "weak" (0-0.3) | "developing" (0.3-0.55) | "strong" (0.55-0.8) | "excellent" (0.8-1.0).
-     - Set "recommendedAction": "clarify" | "probe" | "increase_difficulty" | "change_topic" | "reinforce".
-     - In "feedback": Conversational technical critique referencing exact concepts in candidate's answer. If they mentioned top-k, re-ranking, HNSW, MCP, etc., speak directly to those points.
+==================================================
+STEP 1: NAVIGATION & ATTEMPT RULE (CRITICAL MANDATE)
+==================================================
+1) IF currentQuestionAttempts >= 2 OR if the candidate provided a legitimate technical explanation (even if short, weak, or partial):
+   YOU MUST ADVANCE TO THE NEXT PRIMARY QUESTION (${Number(currentQuestionNumber) + 1})!
+   - Set "nextQuestionNumber": ${Number(currentQuestionNumber) + 1}
+   - Set "isRelevantAnswer": true
+   - Select an UNCOVERED curriculum day if unique covered days < 4, otherwise choose a balanced curriculum day.
+   - Formulate "nextQuestionText": A fresh, strictly UNIQUE technical question for the new curriculum day. Do NOT repeat previous questions.
 
-2. ADAPTIVE PROGRESSION & QUESTION SELECTION:
-   - Next Question Number: ${Number(currentQuestionNumber) + 1}
-   - Target Next Difficulty:
-     - weak/non_responsive -> "Foundation" or "Intermediate"
-     - developing -> "Intermediate"
-     - strong -> "Advanced"
-     - excellent -> "Expert"
-   - Select Next Curriculum Day & Topic:
-     - CRITICAL RULE: If unique curriculum days covered so far < 4, you MUST pick an uncovered curriculum day from AVAILABLE CURRICULUM DAYS (preferably targeting candidate's areasToProbe or skippedTopics).
-     - Otherwise, choose a curriculum day that balances depth and breadth across categories (RAG, Agents, Evaluation, Deployment).
-   - Formulate Next Question:
-     - Generate a contextual question for the next curriculum day that builds on what the candidate demonstrated or missed in their answer.
-     - Must be technically specific and natural.
+2) IF currentQuestionAttempts == 1 AND the candidate's answer is off-topic, a question-instead-of-answer, an incomplete snippet, "idk", or requests clarification:
+   You may ask ONE targeted follow-up or clarification question for Question ${currentQuestionNumber}.
+   - Set "nextQuestionNumber": ${currentQuestionNumber}
+   - Set "isRelevantAnswer": false
+   - Set "nextQuestionText": Your 1 targeted follow-up or clarification question.
 
-3. COMPLETION CHECK:
-   - "isInterviewComplete": Set to true ONLY IF (questionsAskedCount >= 8 OR currentQuestionNumber >= totalQuestions) AND unique curriculum days covered >= 4.
-   - If questionsAskedCount < 8 OR unique curriculum days < 4, "isInterviewComplete" MUST BE false.
+NOTE: Low scores or off-topic labels are recorded in evaluation for scoring, BUT THEY MUST NEVER BLOCK PROGRESSION WHEN ATTEMPT >= 2!
+
+==================================================
+STEP 2: FEEDBACK GENERATION (STRICT ANTI-TEMPLATE)
+==================================================
+- ABSOLUTELY NO GENERIC PRAISE! DO NOT use canned phrases like "Solid understanding...", "Good explanation...", "Great job...", "That is a good answer...", "Nice job...".
+- INSTEAD: Directly cite 1-2 SPECIFIC technical terms, components, or parameters from candidate's exact input (e.g., "You cited top-k=50 with Cohere ReRank...", "You mentioned payload pre-filtering in Qdrant...").
+- Point out what trade-off was omitted or what edge-case failure mode needs consideration.
+
+==================================================
+STEP 3: COMPLETION CHECK
+==================================================
+- "isInterviewComplete": Set to true ONLY IF (questionsAskedCount >= 8 OR currentQuestionNumber >= totalQuestions) AND unique curriculum days covered >= 4.
+- Otherwise, "isInterviewComplete": false.
 
 OUTPUT JSON SCHEMA ONLY:
 {
@@ -258,18 +260,27 @@ OUTPUT JSON SCHEMA ONLY:
   "nextCategory": "string",
   "nextDifficulty": "Foundation" | "Intermediate" | "Advanced" | "Expert",
   "learningSignal": "string",
-  "followUpSuggestions": ["string", "string", "string"],
+  "followUpSuggestions": ["string"],
   "isInterviewComplete": boolean
 }`;
 
+    // Pass conversation history so Gemini is fully aware of previous questions and answers
+    const historyParts = (conversationHistory || []).slice(-8).map((msg: any) => ({
+      role: msg.sender === 'ai' ? 'model' : 'user',
+      parts: [{ text: msg.text || '' }],
+    }));
+
+    const contents = [
+      ...historyParts,
+      {
+        role: 'user',
+        parts: [{ text: `Evaluate candidate response for Question ${currentQuestionNumber}:\nCandidate Input: "${candidateAnswer}"\nCurrent Active Question Prompt: "${currentQuestion}"` }],
+      },
+    ];
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: `Evaluate candidate answer for Question ${currentQuestionNumber}:\nCandidate Answer: "${candidateAnswer}"` }],
-        },
-      ],
+      contents,
       config: {
         systemInstruction,
         responseMimeType: 'application/json',
@@ -304,16 +315,18 @@ app.post('/api/interview/feedback', async (req, res) => {
 
     const systemInstruction = `You are an expert AI Technical Evaluator assessing a completed AI Engineering interview session.
 
-Analyze the candidate's answers and generate a comprehensive, evidence-based technical evaluation report.
+Analyze the candidate's actual answers and generate a comprehensive, evidence-based technical evaluation report.
 
 CANDIDATE: ${candidate?.name || 'Candidate'} (${candidate?.role || 'AI Systems Engineer'})
 SESSION ID: ${session?.sessionId || 'INT-SESSION'}
 CURRICULUM DAYS COVERED: ${JSON.stringify(session?.coveredDays || [])}
+TOTAL QUESTIONS ANSWERED: ${(session?.answers || []).length}
+
 QUESTIONS & ANSWERS HISTORY:
 ${JSON.stringify(
   (session?.answers || []).map((ans: any, i: number) => ({
     questionNumber: ans.questionNumber,
-    questionText: session?.questionsAsked?.[i]?.questionText || '',
+    questionText: session?.questionsAsked?.[i]?.questionText || `Question ${ans.questionNumber}`,
     candidateAnswer: ans.answerText,
     eval: ans.evaluation,
   })),
@@ -322,14 +335,14 @@ ${JSON.stringify(
 )}
 
 YOUR INSTRUCTIONS:
-1. Compute technical scores (0-100) based strictly on candidate's answers:
+1. Compute technical scores (0-100) strictly derived from candidate's answers in THIS session:
    - "overallScore": Weighted score combining accuracy, depth, and communication.
    - "technicalAccuracy": Score reflecting accuracy of vector math, RAG, agents, etc.
    - "systemDesignDepth": Score reflecting architecture trade-offs, scaling, failure handling.
    - "communicationClarity": Score reflecting precision and structure of answers.
-2. Extract specific "strengths" (at least 3 concrete bullet points highlighting what candidate demonstrated well).
-3. Extract specific "growthAreas" (at least 2 concrete bullet points detailing missed concepts or areas needing depth).
-4. Select 2-3 "transcriptHighlights" with question text, candidate answer excerpt, and evaluator note.
+2. Extract specific "strengths" (at least 3 concrete bullet points highlighting exact concepts candidate demonstrated well in their answers).
+3. Extract specific "growthAreas" (at least 2 concrete bullet points detailing missed concepts or areas needing depth based on candidate's answers).
+4. Select 2-3 "transcriptHighlights" with actual question text, candidate answer excerpt, and evaluator note.
 5. Generate "recommendedStudyPlan" with 2-3 specific curriculum days to review next.
 
 OUTPUT JSON SCHEMA ONLY:

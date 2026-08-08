@@ -70,6 +70,13 @@ export default function App() {
   const [activeCandidate, setActiveCandidate] = useState<Candidate>(sampleCandidate);
   const [interviewState, setInterviewState] = useState<InterviewState>(() => createNewInterviewSession(sampleCandidate, settings));
 
+  // Sync interview state whenever active candidate changes to prevent state leakage
+  useEffect(() => {
+    if (interviewState.candidateId !== activeCandidate.id) {
+      setInterviewState(createNewInterviewSession(activeCandidate, settings));
+    }
+  }, [activeCandidate.id, settings]);
+
   // Keep window hash synced for browser URL simulation
   useEffect(() => {
     if (!isAuthenticated) {

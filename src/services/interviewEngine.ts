@@ -20,21 +20,55 @@ function getCategoryForSpec(spec: CurriculumDaySpec): string {
   return spec.type || 'AI Systems Engineering';
 }
 
-function getQuestionsForSpec(spec: CurriculumDaySpec, difficulty: string): string {
+function getQuestionsForCandidateSpec(
+  spec: CurriculumDaySpec,
+  difficulty: string,
+  candidate?: Candidate,
+  questionNumber: number = 1,
+  questionsAskedSoFar: InterviewQuestionRecord[] = []
+): string {
+  const role = candidate?.role || 'AI Engineer';
+  const name = candidate?.name || 'Engineer';
   const tools = spec.tools?.length ? spec.tools.join(', ') : 'standard tooling';
   const primaryObj = spec.objectives?.[0] || 'core technical requirements';
   const topic = getTopicForSpec(spec);
 
+  let baseQuestions: string[] = [];
+
   if (difficulty === 'Expert') {
-    return `For Day ${spec.day} (${topic}), how do you architect production resilience, high throughput, and zero-downtime scaling when integrating ${tools}? Specifically, address how you satisfy "${primaryObj}" under adverse production failure modes.`;
+    baseQuestions = [
+      `As a ${role}, how do you architect high-throughput, zero-downtime production pipelines for Day ${spec.day} (${topic}) using ${tools}? Address how your design satisfies "${primaryObj}" under distributed system failure modes.`,
+      `For Day ${spec.day} (${topic}), what distributed system failure modes, memory spikes, or concurrency bottlenecks emerge when scaling ${tools}? How do you enforce "${primaryObj}" under strict SLA pressures?`,
+      `In high-concurrency production environments, how do you tune ${tools} for Day ${spec.day} (${topic})? Walk through how your architecture guarantees "${primaryObj}" when query throughput scales 10x.`,
+    ];
+  } else if (difficulty === 'Advanced') {
+    baseQuestions = [
+      `Looking at Day ${spec.day} (${topic}), what are the primary architectural trade-offs, latency bottlenecks, and edge-case failure modes when building with ${tools}? How do you enforce "${primaryObj}"?`,
+      `For Day ${spec.day} (${topic}), how do you configure and monitor ${tools} in a production microservice? What mechanisms ensure "${primaryObj}" isn't compromised by degraded network conditions?`,
+      `When implementing Day ${spec.day} (${topic}) for enterprise AI systems, how do you handle error recovery and state synchronization across ${tools}? Specifically address "${primaryObj}".`,
+    ];
+  } else if (difficulty === 'Intermediate') {
+    baseQuestions = [
+      `Regarding Day ${spec.day} (${topic}), walk through your practical implementation approach using ${tools}. How do you ensure "${primaryObj}" is properly designed and verified?`,
+      `In your work as a ${role}, how would you set up and test ${tools} for Day ${spec.day} (${topic})? Walk us through how you handle "${primaryObj}".`,
+      `For Day ${spec.day} (${topic}), how do you structure your data models and API interactions with ${tools} to fulfill "${primaryObj}" efficiently?`,
+    ];
+  } else {
+    baseQuestions = [
+      `On Day ${spec.day} (${topic}), explain the core principles and setup steps when using ${tools} to accomplish "${primaryObj}".`,
+      `For Day ${spec.day} (${topic}), what are the foundational concepts behind ${tools}, and how do they help achieve "${primaryObj}"?`,
+    ];
   }
-  if (difficulty === 'Advanced') {
-    return `Looking at Day ${spec.day} (${topic}), what are the key architectural trade-offs, performance bottlenecks, and edge-case failure modes when working with ${tools}? How would you implement "${primaryObj}"?`;
+
+  // Filter out any question that is already asked in session
+  const previousTexts = questionsAskedSoFar.map((q) => q.questionText.toLowerCase());
+  for (const qText of baseQuestions) {
+    if (!previousTexts.some((prev) => prev.includes(qText.toLowerCase().substring(0, 30)))) {
+      return qText;
+    }
   }
-  if (difficulty === 'Intermediate') {
-    return `Regarding Day ${spec.day} (${topic}), walk through your practical implementation approach using ${tools}. How do you ensure "${primaryObj}" is properly designed and verified?`;
-  }
-  return `On Day ${spec.day} (${topic}), explain the core principles and setup steps when using ${tools} to accomplish "${primaryObj}".`;
+
+  return baseQuestions[questionNumber % baseQuestions.length];
 }
 
 // Helper to derive candidate interview strategy from candidate profile
@@ -140,7 +174,7 @@ export function createNewInterviewSession(
     initialDifficulty = candidate.readinessScore > 85 ? 'Intermediate' : 'Foundation';
   }
 
-  const q1Text = getQuestionsForSpec(q1Spec, initialDifficulty);
+  const q1Text = getQuestionsForCandidateSpec(q1Spec, initialDifficulty, candidate, 1, []);
   const q1Topic = getTopicForSpec(q1Spec);
   const q1Category = getCategoryForSpec(q1Spec);
   const completedCount = candidate.completedMissions ?? 0;
@@ -224,6 +258,10 @@ export async function processCandidateAnswer(
   const updatedMessages = [...currentState.messages, candidateMsg];
   const qNum = currentState.currentQuestionNumber;
 
+  // Track attempt count for current primary question
+  const previousAnswersForThisQ = (currentState.answers || []).filter((a) => a.questionNumber === qNum).length;
+  const currentQuestionAttempts = previousAnswersForThisQ + 1;
+
   // Attempt server API evaluation & question generation
   let apiResult: any = null;
   try {
@@ -234,6 +272,7 @@ export async function processCandidateAnswer(
         candidate,
         settings,
         currentQuestionNumber: qNum,
+        currentQuestionAttempts,
         totalQuestions: currentState.totalQuestions,
         currentQuestion: currentState.currentQuestion,
         currentCurriculumDay: currentState.currentCurriculumDay,
@@ -257,10 +296,10 @@ export async function processCandidateAnswer(
 
   // Fallback to local state-aware evaluator if API fails or is offline
   if (!apiResult) {
-    apiResult = evaluateAnswerLocally(currentState, candidate, answerText, settings);
+    apiResult = evaluateAnswerLocally(currentState, candidate, answerText, settings, currentQuestionAttempts);
   }
 
-  const {
+  let {
     isRelevantAnswer,
     evaluation,
     feedback,
@@ -273,6 +312,29 @@ export async function processCandidateAnswer(
     learningSignal,
     followUpSuggestions = [],
   } = apiResult;
+
+  // SAFETY ENFORCER:
+  // If currentQuestionAttempts >= 2, or if nextQuestionNumber <= qNum when advancing is required, force advance!
+  if (currentQuestionAttempts >= 2 && (!isRelevantAnswer || nextQuestionNumber <= qNum)) {
+    isRelevantAnswer = true;
+    nextQuestionNumber = qNum + 1;
+
+    const uncoveredSpec = ALL_CURRICULUM.find((c) => !currentState.coveredDays.includes(c.day)) ||
+      ALL_CURRICULUM[(qNum) % ALL_CURRICULUM.length];
+
+    nextCurriculumDay = uncoveredSpec.day;
+    nextTopic = getTopicForSpec(uncoveredSpec);
+    nextCategory = getCategoryForSpec(uncoveredSpec);
+    nextQuestionText = getQuestionsForCandidateSpec(
+      uncoveredSpec,
+      currentState.difficulty,
+      candidate,
+      nextQuestionNumber,
+      currentState.questionsAsked
+    );
+  }
+
+  console.log(`[INTERVIEW ENGINE] Session=${currentState.sessionId} | Candidate=${candidate.name} | Q=${qNum} | Attempt=${currentQuestionAttempts} | Advance=${isRelevantAnswer} -> NextQ=${nextQuestionNumber}`);
 
   // Record candidate answer with evaluation
   const newAnswerRecord = {
@@ -296,7 +358,7 @@ export async function processCandidateAnswer(
 
   let fullAiText = '';
   if (!isRelevantAnswer) {
-    fullAiText = feedback;
+    fullAiText = `${feedback}\n\n${nextQuestionText && nextQuestionText !== currentState.currentQuestion ? nextQuestionText : ''}`.trim();
   } else if (isLastQuestion) {
     fullAiText = `${feedback}\n\n**Interview Complete!** You have completed ${currentState.questionsAsked.length} technical questions covering ${updatedCoveredDays.length} curriculum days. Thank you for walking through your system architecture reasoning. Click "Exit" to review your detailed evaluation card.`;
   } else {
@@ -317,15 +379,17 @@ export async function processCandidateAnswer(
   // Record question asked if valid transition
   const newQuestionsAsked = [...currentState.questionsAsked];
   if (isRelevantAnswer && !isLastQuestion) {
-    newQuestionsAsked.push({
-      questionNumber: nextQuestionNumber,
-      questionText: nextQuestionText,
-      curriculumDay: nextCurriculumDay,
-      topicTag: nextTopic,
-      category: nextCategory,
-      difficulty: nextDifficulty,
-      followUpSuggestions,
-    });
+    if (!newQuestionsAsked.some((q) => q.questionNumber === nextQuestionNumber)) {
+      newQuestionsAsked.push({
+        questionNumber: nextQuestionNumber,
+        questionText: nextQuestionText,
+        curriculumDay: nextCurriculumDay,
+        topicTag: nextTopic,
+        category: nextCategory,
+        difficulty: nextDifficulty,
+        followUpSuggestions,
+      });
+    }
   }
 
   // Update learning signals
@@ -349,7 +413,7 @@ export async function processCandidateAnswer(
     ...currentState,
     currentQuestionNumber: isRelevantAnswer ? nextQuestionNumber : qNum,
     currentQuestionIndex: isRelevantAnswer ? nextQuestionNumber : qNum,
-    currentQuestion: isLastQuestion ? 'Interview Completed' : (isRelevantAnswer ? nextQuestionText : currentState.currentQuestion),
+    currentQuestion: isLastQuestion ? 'Interview Completed' : (isRelevantAnswer ? nextQuestionText : (nextQuestionText || currentState.currentQuestion)),
     currentCurriculumDay: isRelevantAnswer ? nextCurriculumDay : currentState.currentCurriculumDay,
     currentFocusTopic: isRelevantAnswer ? nextTopic : currentState.currentFocusTopic,
     currentCategory: isRelevantAnswer ? nextCategory : currentState.currentCategory,
@@ -371,109 +435,129 @@ function evaluateAnswerLocally(
   currentState: InterviewState,
   candidate: Candidate,
   answerText: string,
-  settings?: InterviewSettings
+  settings?: InterviewSettings,
+  currentQuestionAttempts: number = 1
 ) {
-  const cleanAnswer = (answerText || '').toString().trim().toLowerCase();
-  const words = cleanAnswer.split(/\s+/).filter(Boolean);
+  const rawText = (answerText || '').toString().trim();
+  const lowerAnswer = rawText.toLowerCase();
+  const words = lowerAnswer.split(/\s+/).filter(Boolean);
   const qNum = currentState.currentQuestionNumber;
 
-  // Check for greetings or non-technical input
-  const greetings = ['hi', 'hello', 'hey', 'greetings', 'yo', 'test', 'sup'];
-  const isGreeting = greetings.includes(cleanAnswer) || (words.length <= 2 && greetings.some((g) => cleanAnswer.includes(g)));
-  const isTooShort = words.length < 3 && !cleanAnswer.includes('top') && !cleanAnswer.includes('vector') && !cleanAnswer.includes('mcp');
+  const nonRespEval: AnswerEvaluation = {
+    score: 0.0,
+    technicalAccuracy: 0.0,
+    depth: 0.0,
+    reasoning: 0.0,
+    completeness: 0.0,
+    conceptsDemonstrated: [],
+    conceptsMissing: ['Technical context', 'System architecture terms'],
+    misconceptions: [],
+    answerQuality: 'non_responsive',
+    recommendedAction: 'clarify',
+  };
 
-  if (isGreeting || isTooShort || cleanAnswer === 'idk' || cleanAnswer === 'i dont know') {
-    const isExplicitIdk = cleanAnswer === 'idk' || cleanAnswer === 'i dont know';
+  const getNextQuestionData = () => {
+    const nextQNum = qNum + 1;
+    const uncoveredSpec = ALL_CURRICULUM.find((c) => !currentState.coveredDays.includes(c.day)) ||
+      ALL_CURRICULUM[(qNum) % ALL_CURRICULUM.length];
+    const day = uncoveredSpec.day;
+    const topic = getTopicForSpec(uncoveredSpec);
+    const category = getCategoryForSpec(uncoveredSpec);
+    const qText = getQuestionsForCandidateSpec(uncoveredSpec, currentState.difficulty, candidate, nextQNum, currentState.questionsAsked);
+    return { nextQNum, day, topic, category, qText };
+  };
 
-    const nonRespEval: AnswerEvaluation = {
-      score: 0.05,
-      technicalAccuracy: 0.0,
-      depth: 0.0,
-      reasoning: 0.0,
-      completeness: 0.0,
-      conceptsDemonstrated: [],
-      conceptsMissing: ['Technical context', 'System architecture terms'],
-      misconceptions: [],
-      answerQuality: 'non_responsive',
-      recommendedAction: 'clarify',
-    };
+  const questionWords = ['what is', 'what are', 'how does', 'how do', 'why is', 'why do', 'can you', 'could you', 'is it', 'where is', 'how would you'];
+  const startsWithQuestionWord = questionWords.some((qw) => lowerAnswer.startsWith(qw));
+  const endsWithQuestionMark = rawText.endsWith('?');
+  const isQuestionInsteadOfAnswer = (startsWithQuestionWord || endsWithQuestionMark) && words.length <= 16 && !lowerAnswer.includes('i recommend') && !lowerAnswer.includes('i would');
 
-    if (isExplicitIdk) {
-      return {
-        isRelevantAnswer: false,
-        evaluation: nonRespEval,
-        feedback: `Understood, ${candidate.name}. If you're unfamiliar with Day ${currentState.currentCurriculumDay} (${currentState.currentFocusTopic}), we can break it down. For **Question ${qNum}**, consider the core objective: how does your design prevent duplicate retrieval chunks or limit latency spikes?`,
-        nextQuestionNumber: qNum,
-        nextCurriculumDay: currentState.currentCurriculumDay,
-        nextQuestionText: currentState.currentQuestion,
-        nextTopic: currentState.currentFocusTopic,
-        nextCategory: currentState.currentCategory,
-        nextDifficulty: currentState.difficulty,
-        learningSignal: `Question ${qNum}: Candidate requested clarification on Day ${currentState.currentCurriculumDay}`,
-        followUpSuggestions: ['Explain key trade-offs', 'Provide basic principles'],
-        isInterviewComplete: false,
-      };
+  const isSnippet = words.length <= 4 && (
+    currentState.currentQuestion.toLowerCase().includes(lowerAnswer) ||
+    lowerAnswer.startsWith('explain') ||
+    lowerAnswer.startsWith('how would') ||
+    lowerAnswer.startsWith('what is the')
+  );
+
+  const gibberishPatterns = ['asdf', 'qwerty', 'zxcv', '1234', 'test', 'hello', 'hi', 'hey', 'yo', 'sup'];
+  const isGibberish = gibberishPatterns.some((p) => lowerAnswer === p || (words.length <= 2 && lowerAnswer.includes(p)));
+
+  const isExplicitIdk = lowerAnswer === 'idk' || lowerAnswer === 'i dont know' || lowerAnswer === "i don't know" || lowerAnswer === 'not sure' || lowerAnswer === 'no idea';
+
+  const isNonResponsive = isQuestionInsteadOfAnswer || isSnippet || isGibberish || isExplicitIdk;
+
+  if (isNonResponsive && currentQuestionAttempts === 1) {
+    let feedback = '';
+    if (isQuestionInsteadOfAnswer) {
+      feedback = `You're asking a question ("${rawText}") rather than addressing Question ${qNum}. Let's stay with the prompt: "${currentState.currentQuestion}". How would you approach this in your system design?`;
+    } else if (isSnippet) {
+      feedback = `That response looks like an incomplete prompt fragment. Please provide a full technical answer to Question ${qNum}: "${currentState.currentQuestion}".`;
+    } else if (isGibberish) {
+      feedback = `That response does not address the question asked. To evaluate your AI engineering depth for Question ${qNum}, please focus on: "${currentState.currentQuestion}".`;
+    } else {
+      feedback = `Understood, ${candidate.name}. If you haven't implemented Day ${currentState.currentCurriculumDay} (${currentState.currentFocusTopic}) directly, consider the core principle: how would you balance latency versus recall here?`;
     }
 
     return {
       isRelevantAnswer: false,
-      evaluation: nonRespEval,
-      feedback: `Hello ${candidate.name}. That appears to be a brief greeting or non-technical note.\n\nTo evaluate your system design depth for **Question ${qNum}**, please address the specific technical challenge asked above: *"${currentState.currentQuestion}"*`,
+      evaluation: isExplicitIdk ? { ...nonRespEval, score: 0.1, answerQuality: 'weak' } : nonRespEval,
+      feedback,
       nextQuestionNumber: qNum,
       nextCurriculumDay: currentState.currentCurriculumDay,
       nextQuestionText: currentState.currentQuestion,
       nextTopic: currentState.currentFocusTopic,
       nextCategory: currentState.currentCategory,
       nextDifficulty: currentState.difficulty,
-      learningSignal: `Question ${qNum}: Awaiting technical answer on ${currentState.currentFocusTopic}`,
+      learningSignal: `Question ${qNum}: Clarification requested on Attempt 1`,
       followUpSuggestions: ['Answer technical question', 'Request clarification'],
       isInterviewComplete: false,
     };
   }
 
-  // Technical answer evaluation
-  let score = 0.5;
-  let conceptsDemonstrated: string[] = [];
-  let conceptsMissing: string[] = [];
+  const nextData = getNextQuestionData();
+
+  let score = 0.65;
+  let conceptsDemonstrated: string[] = ['general system reasoning'];
+  let conceptsMissing: string[] = ['quantitative SLAs', 'edge-case failure modes'];
   let feedbackText = '';
   let learningSignal = '';
 
-  if (cleanAnswer.includes('top-k') || cleanAnswer.includes('top k') || cleanAnswer.includes('increase top')) {
+  if (isNonResponsive) {
+    score = 0.1;
+    conceptsDemonstrated = [];
+    conceptsMissing = ['Technical context', 'System architecture terms'];
+    feedbackText = `Note on Question ${qNum}: Moving forward to the next core AI engineering domain.`;
+  } else if (lowerAnswer.includes('top-k') || lowerAnswer.includes('top k') || lowerAnswer.includes('increase top')) {
     score = 0.75;
     conceptsDemonstrated = ['top-k retrieval', 'recall expansion'];
     conceptsMissing = ['re-ranking stage', 'context window dilution'];
-    feedbackText = `You highlighted expanding **top-k** parameters. Increasing top-k improves raw recall and ensures critical candidate chunks aren't cut off prematurely. However, higher top-k values increase vector DB query latency and introduce context noise. Pairing top-k expansion with a downstream cross-encoder or MMR re-ranker optimizes both recall and precision.`;
-    learningSignal = `Question ${qNum}: Articulated top-k recall expansion trade-offs`;
-  } else if (cleanAnswer.includes('rerank') || cleanAnswer.includes('mmr') || cleanAnswer.includes('cohere') || cleanAnswer.includes('re-rank')) {
+    feedbackText = `You highlighted expanding top-k parameters. Increasing top-k improves raw recall and ensures critical candidate chunks aren't cut off prematurely. However, higher top-k values increase vector DB query latency and introduce context noise. Pairing top-k expansion with a downstream cross-encoder or MMR re-ranker optimizes both recall and precision.`;
+  } else if (lowerAnswer.includes('rerank') || lowerAnswer.includes('mmr') || lowerAnswer.includes('cohere') || lowerAnswer.includes('re-rank')) {
     score = 0.90;
     conceptsDemonstrated = ['MMR re-ranking', 'diversity scoring', 'cross-encoders'];
     conceptsMissing = ['latency budgeting'];
-    feedbackText = `Strong architectural reasoning on **re-ranking** and diversity scoring. Using Maximal Marginal Relevance (MMR) or Cohere ReRank effectively eliminates duplicate vector clusters while preserving contextual precision before injecting chunks into the prompt context window.`;
-    learningSignal = `Question ${qNum}: Applied MMR re-ranking to solve semantic duplication`;
-  } else if (cleanAnswer.includes('hnsw') || cleanAnswer.includes('m') || cleanAnswer.includes('ef_construct') || cleanAnswer.includes('index')) {
+    feedbackText = `Strong architectural reasoning on re-ranking and diversity scoring. Using Maximal Marginal Relevance (MMR) or Cohere ReRank effectively eliminates duplicate vector clusters while preserving contextual precision before injecting chunks into the prompt context window.`;
+  } else if (lowerAnswer.includes('hnsw') || lowerAnswer.includes('m') || lowerAnswer.includes('ef_construct') || lowerAnswer.includes('index')) {
     score = 0.85;
     conceptsDemonstrated = ['HNSW index parameters', 'indexing throughput vs recall'];
     conceptsMissing = ['quantization trade-offs'];
-    feedbackText = `Solid understanding of **HNSW graph index parameters**. Tuning max edges per node (m) and construction search depth (ef_construct) is key to balancing build time vs recall at scale. Decoupling index construction into background workers prevents query API latency spikes.`;
-    learningSignal = `Question ${qNum}: Explained HNSW indexing parameter tuning`;
-  } else if (cleanAnswer.includes('mcp') || cleanAnswer.includes('schema') || cleanAnswer.includes('zod') || cleanAnswer.includes('tool')) {
+    feedbackText = `Solid understanding of HNSW graph index parameters. Tuning max edges per node (m) and construction search depth (ef_construct) is key to balancing build time vs recall at scale. Decoupling index construction into background workers prevents query API latency spikes.`;
+  } else if (lowerAnswer.includes('mcp') || lowerAnswer.includes('schema') || lowerAnswer.includes('zod') || lowerAnswer.includes('tool')) {
     score = 0.88;
     conceptsDemonstrated = ['MCP tool protocols', 'Zod schema validation', 'circuit breakers'];
     conceptsMissing = ['multi-agent context passing'];
-    feedbackText = `Accurate observation regarding **Model Context Protocol (MCP)** tool execution and schema guards. Enforcing JSON schema constraints and implementing retry handlers prevents downstream agent pipeline failures when external API integrations behave unpredictably.`;
-    learningSignal = `Question ${qNum}: Demonstrated MCP tool integration and schema enforcement`;
-  } else if (cleanAnswer.includes('cache') || cleanAnswer.includes('circuit') || cleanAnswer.includes('redis') || cleanAnswer.includes('fallback')) {
+    feedbackText = `Accurate observation regarding Model Context Protocol (MCP) tool execution and schema guards. Enforcing JSON schema constraints and implementing retry handlers prevents downstream agent pipeline failures when external API integrations behave unpredictably.`;
+  } else if (lowerAnswer.includes('cache') || lowerAnswer.includes('circuit') || lowerAnswer.includes('redis') || lowerAnswer.includes('fallback')) {
     score = 0.82;
     conceptsDemonstrated = ['circuit breakers', 'LRU cache fallbacks', 'SLA protection'];
     conceptsMissing = ['cache invalidation strategies'];
-    feedbackText = `Excellent resilience pattern design. Implementing an in-memory **LRU cache** or secondary keyword fallback when primary vector DB query latency exceeds SLAs keeps agentic execution loops responsive under heavy load.`;
-    learningSignal = `Question ${qNum}: Designed high-availability resilience fallbacks`;
+    feedbackText = `Excellent resilience pattern design. Implementing an in-memory LRU cache or secondary keyword fallback when primary vector DB query latency exceeds SLAs keeps agentic execution loops responsive under heavy load.`;
   } else {
-    score = 0.60;
+    score = 0.65;
     conceptsDemonstrated = ['general system reasoning'];
     conceptsMissing = ['quantitative SLAs', 'edge-case failure modes'];
-    const snippet = answerText.length > 80 ? answerText.substring(0, 80) + '...' : answerText;
-    feedbackText = `Thank you for detailing your approach: *"${snippet}"*. You outlined practical trade-offs for ${currentState.currentFocusTopic}. Considering real-world operational constraints, balancing precision, execution latency, and error handling is critical for reliable AI engineering.`;
+    const snippet = rawText.length > 80 ? rawText.substring(0, 80) + '...' : rawText;
+    feedbackText = `Regarding your approach ("${snippet}"): you outlined practical trade-offs for ${currentState.currentFocusTopic}. To elevate this for enterprise systems, consider quantifying exact SLAs, error recovery bounds, and edge-case failure modes.`;
     learningSignal = `Question ${qNum}: Provided architectural explanation for Day ${currentState.currentCurriculumDay}`;
   }
 
@@ -486,7 +570,7 @@ function evaluateAnswerLocally(
     conceptsDemonstrated,
     conceptsMissing,
     misconceptions: [],
-    answerQuality: score >= 0.85 ? 'excellent' : score >= 0.7 ? 'strong' : 'developing',
+    answerQuality: isNonResponsive ? 'non_responsive' : score >= 0.85 ? 'excellent' : score >= 0.7 ? 'strong' : 'developing',
     recommendedAction: score >= 0.8 ? 'increase_difficulty' : 'probe',
   };
 
@@ -502,48 +586,24 @@ function evaluateAnswerLocally(
     nextDifficulty = 'Foundation';
   }
 
-  // Select Next Curriculum Day & Topic
-  const coveredDaysSet = new Set(currentState.coveredDays);
-  let nextDay = currentState.currentCurriculumDay;
-
-  // If unique covered days < 4, prioritize an uncovered curriculum day from targetDays
-  if (coveredDaysSet.size < 4) {
-    const uncovered = currentState.candidateStrategy.targetDays.find((d) => !coveredDaysSet.has(d));
-    if (uncovered) {
-      nextDay = uncovered;
-    } else {
-      const anyUncovered = ALL_CURRICULUM.find((c) => !coveredDaysSet.has(c.day));
-      if (anyUncovered) nextDay = anyUncovered.day;
-    }
-  } else {
-    // Pick next day sequentially or rotate categories
-    const currentIndex = ALL_CURRICULUM.findIndex((c) => c.day === currentState.currentCurriculumDay);
-    const nextSpec = ALL_CURRICULUM[(currentIndex + 1) % ALL_CURRICULUM.length];
-    nextDay = nextSpec.day;
-  }
-
-  const nextSpec = ALL_CURRICULUM.find((c) => c.day === nextDay) || ALL_CURRICULUM[0];
-  const nextQText = getQuestionsForSpec(nextSpec, nextDifficulty);
-
-  const nextQNum = qNum + 1;
   const isInterviewComplete =
-    (nextQNum > currentState.totalQuestions || currentState.questionsAsked.length >= currentState.totalQuestions) &&
+    (nextData.nextQNum > currentState.totalQuestions || currentState.questionsAsked.length >= currentState.totalQuestions) &&
     currentState.questionsAsked.length >= 8 &&
-    coveredDaysSet.size >= 4;
+    currentState.coveredDays.length >= 4;
 
   return {
     isRelevantAnswer: true,
     evaluation: evalObj,
     feedback: feedbackText,
-    nextQuestionNumber: nextQNum,
-    nextCurriculumDay: nextSpec.day,
-    nextQuestionText: nextQText,
-    nextTopic: getTopicForSpec(nextSpec),
-    nextCategory: getCategoryForSpec(nextSpec),
+    nextQuestionNumber: nextData.nextQNum,
+    nextCurriculumDay: nextData.day,
+    nextQuestionText: nextData.qText,
+    nextTopic: nextData.topic,
+    nextCategory: nextData.category,
     nextDifficulty,
-    learningSignal,
+    learningSignal: `Question ${qNum}: Evaluated answer (attempt ${currentQuestionAttempts})`,
     followUpSuggestions: [
-      `Analyze ${nextSpec.tools[0] || 'system'} latency`,
+      `Analyze ${nextData.topic} latency`,
       'Explain production failure modes',
       'Compare alternative architectures',
     ],
