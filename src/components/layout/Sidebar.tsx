@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { NavTab } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
+import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -44,20 +45,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
     >
       {/* Brand Header */}
       <div className="p-5 border-b border-[#27272A]/80">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] flex items-center justify-center text-white shadow-md shadow-purple-500/20 shrink-0">
-            <Sparkles className="w-5 h-5" />
-          </div>
+        <button 
+          onClick={() => onTabChange('dashboard')}
+          className="flex items-center gap-3 text-left w-full focus:outline-none group cursor-pointer"
+        >
+          <img 
+            src={appLogo} 
+            alt="IntervViewForge logo" 
+            className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform" 
+            referrerPolicy="no-referrer"
+          />
           <div className="overflow-hidden">
             <h1 className="text-sm font-bold text-[#0F172A] dark:text-[#F4F4F5] tracking-tight leading-snug truncate">
-              InterviewForge
+              IntervViewForge
             </h1>
             <p className="text-[11px] text-[#475569] dark:text-[#A1A1AA] flex items-center gap-1 font-medium">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
               Interview Platform
             </p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Navigation Links */}

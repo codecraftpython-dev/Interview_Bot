@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Sparkles, Lock, Mail, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -69,11 +70,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         {/* Brand Title */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] text-white shadow-lg shadow-purple-500/25 mb-1">
-            <Sparkles className="w-6 h-6" />
+          <div className="flex justify-center mb-1">
+            <img 
+              src={appLogo} 
+              alt="IntervViewForge logo" 
+              className="w-12 h-12 rounded-2xl object-cover shrink-0 shadow-lg shadow-purple-500/25" 
+              referrerPolicy="no-referrer"
+            />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            InterviewForge
+            IntervViewForge
           </h1>
           <p className="text-xs text-[#A1A1AA] max-w-xs mx-auto font-medium">
             Where every interview is forged around you.

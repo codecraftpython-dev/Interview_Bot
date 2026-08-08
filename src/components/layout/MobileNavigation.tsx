@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { NavTab } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
+import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -78,11 +79,14 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
               {/* Header inside drawer */}
               <div className="flex items-center justify-between pb-4 border-b border-[#27272A] mb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] flex items-center justify-center text-white shrink-0">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
+                  <img 
+                    src={appLogo} 
+                    alt="IntervViewForge logo" 
+                    className="w-8 h-8 rounded-lg object-cover shrink-0 shadow-sm shadow-purple-500/20" 
+                    referrerPolicy="no-referrer"
+                  />
                   <div>
-                    <h2 className="text-sm font-bold text-[#0F172A] dark:text-[#F4F4F5]">InterviewForge</h2>
+                    <h2 className="text-sm font-bold text-[#0F172A] dark:text-[#F4F4F5]">IntervViewForge</h2>
                     <p className="text-[10px] text-[#475569] dark:text-[#A1A1AA] font-medium">Interview Platform</p>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -103,12 +104,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-2.5 group text-left focus:outline-none"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] flex items-center justify-center text-white shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
-              <Sparkles className="w-5 h-5" />
-            </div>
+            <img 
+              src={appLogo} 
+              alt="IntervViewForge logo" 
+              className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform" 
+              referrerPolicy="no-referrer"
+            />
             <div>
               <span className="text-base font-bold text-[#F4F4F5] tracking-tight group-hover:text-white transition-colors block">
-                InterviewForge
+                IntervViewForge
               </span>
               <span className="text-[10px] text-[#A1A1AA] font-mono hidden sm:block">
                 Enterprise AI Engineering
@@ -726,10 +730,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-[#27272A]/80">
           <div className="space-y-3 md:col-span-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#8B5CF6] text-white flex items-center justify-center font-bold">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <span className="text-base font-bold text-[#F4F4F5]">InterviewForge</span>
+              <img 
+                src={appLogo} 
+                alt="IntervViewForge logo" 
+                className="w-7 h-7 rounded-lg object-cover shrink-0 shadow-sm" 
+                referrerPolicy="no-referrer"
+              />
+              <span className="text-base font-bold text-[#F4F4F5]">IntervViewForge</span>
             </div>
             <p className="text-xs text-[#A1A1AA] max-w-sm leading-relaxed">
               AI-powered technical interviewing platform for Enterprise AI Systems Engineering. Adaptive questioning, personalized candidate journeys, and evidence-based reports.
@@ -756,7 +763,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#71717A] gap-4">
-          <p>© {new Date().getFullYear()} InterviewForge. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} IntervViewForge. All rights reserved.</p>
           <p>Enterprise AI Systems Engineering</p>
         </div>
       </footer>

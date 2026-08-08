@@ -1,6 +1,7 @@
 import React from 'react';
-import { Sparkles, Clock, Pause, Play, LogOut, Sliders } from 'lucide-react';
+import { Clock, Pause, Play, LogOut, Sliders } from 'lucide-react';
 import { Button } from '../common/Button';
+import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
 
 interface InterviewHeaderProps {
   currentQuestion: number;
@@ -50,12 +51,15 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
           <div className="h-4 w-[1px] bg-[#27272A] hidden sm:block" />
 
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] flex items-center justify-center text-white shrink-0 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
+            <img 
+              src={appLogo} 
+              alt="IntervViewForge logo" 
+              className="w-7 h-7 rounded-lg object-cover shrink-0 shadow-sm" 
+              referrerPolicy="no-referrer"
+            />
             <div className="min-w-0">
               <h2 className="text-xs sm:text-sm font-semibold text-[#F4F4F5] truncate leading-tight">
-                InterviewForge
+                IntervViewForge
               </h2>
               <p className="text-[10px] sm:text-[11px] text-[#A1A1AA] truncate font-medium flex items-center gap-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#8B5CF6]"></span>
