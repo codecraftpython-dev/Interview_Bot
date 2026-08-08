@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-bg-primary: #09090B;
   --color-bg-secondary: #111113;
@@ -346,3 +348,46 @@ textarea {
 html.light .card-hover-border:hover {
   border-color: #CBD5E1 !important;
 }
+
+/* ==========================================================================
+   LEFT SIDEBAR LIGHT MODE ACCESSIBILITY & CONTRAST
+   ========================================================================== */
+html.light aside nav button,
+html.light nav button {
+  color: #334155;
+}
+
+html.light aside nav button svg,
+html.light nav button svg {
+  color: #64748B;
+}
+
+html.light aside nav button:hover,
+html.light nav button:hover {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+html.light aside nav button:hover svg,
+html.light nav button:hover svg {
+  color: #0F172A !important;
+}
+
+/* Active navigation item in Light Mode */
+html.light aside nav button.bg-\[\#8B5CF6\]\/15,
+html.light nav button.bg-\[\#8B5CF6\]\/15 {
+  background-color: rgba(139, 92, 246, 0.15) !important;
+  color: #7C3AED !important;
+  border-color: rgba(139, 92, 246, 0.4) !important;
+}
+
+html.light aside nav button.bg-\[\#8B5CF6\]\/15 svg,
+html.light nav button.bg-\[\#8B5CF6\]\/15 svg {
+  color: #7C3AED !important;
+}
+
+html.light aside nav button.bg-\[\#8B5CF6\]\/15 span,
+html.light nav button.bg-\[\#8B5CF6\]\/15 span {
+  color: #7C3AED !important;
+}
+
