@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Award,
   CheckCircle2,
@@ -14,6 +14,9 @@ import {
   UserCheck,
   FileText,
   Brain,
+  Trash2,
+  X,
+  AlertOctagon,
 } from 'lucide-react';
 import { FeedbackSummary, CompletedSessionRecord } from '../../types';
 import { Badge } from '../common/Badge';
@@ -26,6 +29,7 @@ interface FeedbackViewProps {
   selectedSessionId?: string;
   onSelectSession?: (sessionId: string) => void;
   onReInterview: () => void;
+  onDeleteSession?: (sessionId: string) => Promise<boolean> | boolean;
 }
 
 export const FeedbackView: React.FC<FeedbackViewProps> = ({
@@ -34,28 +38,41 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
   selectedSessionId,
   onSelectSession,
   onReInterview,
+  onDeleteSession,
 }) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   if (!feedback) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 text-center space-y-6">
-        <div className="w-16 h-16 rounded-full bg-[#8B5CF6]/10 border border-[#8B5CF6]/30 flex items-center justify-center mx-auto text-[#8B5CF6]">
-          <Award className="w-8 h-8" />
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-16 h-16 rounded-2xl bg-[#151518] border border-[#27272A] flex items-center justify-center mx-auto text-[#71717A]">
+          <FileText className="w-8 h-8 text-[#8B5CF6]" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-[#F4F4F5]">No Completed Interview Reports Yet</h1>
+          <h1 className="text-2xl font-bold text-[#F4F4F5]">Interview Session Not Found</h1>
           <p className="text-sm text-[#A1A1AA] max-w-md mx-auto">
-            Complete a practice interview session with the AI Interviewer to receive your personalized, evidence-based technical evaluation.
+            This interview session may have been permanently deleted or does not exist.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={onReInterview}
-          icon={<Sparkles className="w-5 h-5" />}
-          className="shadow-lg shadow-purple-500/20"
-        >
-          Start Practice Interview
-        </Button>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => (window.location.hash = '#candidates')}
+          >
+            Back to Candidates
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={onReInterview}
+            icon={<Sparkles className="w-4 h-4" />}
+          >
+            Start Practice Interview
+          </Button>
+        </div>
       </div>
     );
   }
@@ -77,8 +94,31 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
   const questionsAnswered = feedback.totalQuestionsAnswered ?? 8;
   const questionLimit = feedback.questionLimit ?? 8;
 
+  const currentSessionId = selectedSessionId || feedback.sessionId;
+
+  const handleConfirmDelete = async () => {
+    if (!onDeleteSession || !currentSessionId || isDeleting) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const success = await onDeleteSession(currentSessionId);
+      if (!success) {
+        setDeleteError('Unable to delete this interview session. Please try again.');
+        setIsDeleting(false);
+      } else {
+        setShowDeleteModal(false);
+        setIsDeleting(false);
+      }
+    } catch (err: any) {
+      setDeleteError(err?.message || 'Unable to delete this interview session. Please try again.');
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 text-left">
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 text-left relative">
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#27272A]">
         <div>
@@ -104,7 +144,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           {completedSessions.length > 1 && onSelectSession && (
             <select
-              value={selectedSessionId || feedback.sessionId}
+              value={currentSessionId}
               onChange={(e) => onSelectSession(e.target.value)}
               className="bg-[#151518] border border-[#27272A] text-xs text-[#F4F4F5] rounded-xl px-3 py-2 focus:outline-none focus:border-[#8B5CF6]"
             >
@@ -119,6 +159,21 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
           <Button variant="primary" size="sm" onClick={onReInterview} icon={<Sparkles className="w-4 h-4" />}>
             New Practice Session
           </Button>
+
+          {onDeleteSession && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                setDeleteError(null);
+                setShowDeleteModal(true);
+              }}
+              icon={<Trash2 className="w-4 h-4" />}
+              className="border-[#EF4444]/40 hover:bg-[#EF4444]/20"
+            >
+              Delete Interview
+            </Button>
+          )}
         </div>
       </div>
 
@@ -494,6 +549,124 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
                 <div className="text-[11px] text-[#A1A1AA] leading-relaxed">{plan.action}</div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#151518] border border-[#27272A] rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-5 text-left relative overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/30 flex items-center justify-center text-[#EF4444] shrink-0">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#F4F4F5]">Delete Interview Session?</h3>
+                  <p className="text-xs text-[#A1A1AA] mt-0.5">
+                    Session <span className="font-mono text-[#F4F4F5] font-semibold">#{currentSessionId}</span> • {feedback.candidateName}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => !isDeleting && setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="text-[#71717A] hover:text-[#F4F4F5] p-1 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 bg-[#EF4444]/15 border border-[#EF4444]/30 rounded-xl text-xs text-[#FCA5A5] flex items-center gap-2">
+                <AlertOctagon className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            {/* Clear Breakdown: WILL BE DELETED vs WILL NOT BE DELETED */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* WILL BE DELETED */}
+              <div className="bg-[#1A1A1F] p-3.5 rounded-xl border border-[#EF4444]/30 space-y-2">
+                <div className="font-bold text-[#EF4444] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Will Be Deleted</span>
+                </div>
+                <ul className="space-y-1.5 text-[#D4D4D8] leading-tight">
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#EF4444] font-bold">✓</span>
+                    <span>Interview conversation & logs</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#EF4444] font-bold">✓</span>
+                    <span>Questions and candidate answers</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#EF4444] font-bold">✓</span>
+                    <span>Scores & technical evaluations</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#EF4444] font-bold">✓</span>
+                    <span>Session feedback & stats</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* WILL NOT BE DELETED */}
+              <div className="bg-[#1A1A1F] p-3.5 rounded-xl border border-[#22C55E]/30 space-y-2">
+                <div className="font-bold text-[#22C55E] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Will NOT Be Deleted</span>
+                </div>
+                <ul className="space-y-1.5 text-[#D4D4D8] leading-tight">
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#22C55E] font-bold">✓</span>
+                    <span>Candidate profile & ID</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#22C55E] font-bold">✓</span>
+                    <span>Curriculum progress & missions</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#22C55E] font-bold">✓</span>
+                    <span>Learning signals & attempt history</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#22C55E] font-bold">✓</span>
+                    <span>Other interview sessions</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#A1A1AA] leading-relaxed">
+              This will permanently remove this interview session. Candidate profile and curriculum progress will <strong className="text-[#F4F4F5]">NOT</strong> be affected. This action cannot be undone.
+            </p>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#27272A]">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                isLoading={isDeleting}
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                icon={<Trash2 className="w-4 h-4" />}
+                className="bg-[#EF4444] hover:bg-[#DC2626] text-white border-none shadow-lg shadow-red-500/20"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Interview Session'}
+              </Button>
+            </div>
           </div>
         </div>
       )}

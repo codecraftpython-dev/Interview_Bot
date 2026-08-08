@@ -142,6 +142,29 @@ app.post('/api/interview', async (req, res) => {
   }
 });
 
+// API route for deleting a specific interview session
+app.delete(['/api/interview/:sessionId', '/api/interview/session/:sessionId'], (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required' });
+    }
+
+    const existed = apiInterviewSessions.has(sessionId);
+    apiInterviewSessions.delete(sessionId);
+
+    return res.json({
+      success: true,
+      sessionId,
+      deleted: existed,
+      message: `Interview session ${sessionId} deleted successfully.`,
+    });
+  } catch (err: any) {
+    console.error('Error in DELETE /api/interview:', err?.message || err);
+    return res.status(500).json({ error: err?.message || 'Failed to delete interview session' });
+  }
+});
+
 // API route for interview evaluation and question generation
 app.post('/api/interview/generate', async (req, res) => {
   try {

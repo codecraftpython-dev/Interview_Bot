@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { CheckCircle2, X } from 'lucide-react';
 import { AppShell } from './components/layout/AppShell';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { InterviewScreen } from './components/interview/InterviewScreen';
@@ -131,6 +132,59 @@ export default function App() {
     setCurrentTab('feedback');
   };
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const handleDeleteSession = async (sessionIdToDelete: string): Promise<boolean> => {
+    try {
+      // 1. Send DELETE request to backend endpoint if running
+      try {
+        await fetch(`/api/interview/${encodeURIComponent(sessionIdToDelete)}`, {
+          method: 'DELETE',
+        });
+      } catch (err) {
+        console.warn('Backend DELETE API call failed, proceeding with local state cleanup:', err);
+      }
+
+      // 2. Filter out deleted session from local state & localStorage
+      let remainingSessions: CompletedSessionRecord[] = [];
+      setCompletedSessions((prev) => {
+        remainingSessions = prev.filter((s) => s.sessionId !== sessionIdToDelete);
+        try {
+          localStorage.setItem('interview_agent_completed_sessions', JSON.stringify(remainingSessions));
+        } catch (e) {
+          console.error('Failed to update localStorage after deletion:', e);
+        }
+        return remainingSessions;
+      });
+
+      // 3. Update selectedSessionId
+      setSelectedSessionId((prevSelected) => {
+        if (prevSelected === sessionIdToDelete) {
+          return remainingSessions.length > 0 ? remainingSessions[0].sessionId : undefined;
+        }
+        return prevSelected;
+      });
+
+      // 4. Show success toast notification
+      setToastMessage('Interview session deleted successfully.');
+
+      // 5. Navigate to candidates view
+      setCurrentTab('candidates');
+
+      return true;
+    } catch (err) {
+      console.error('Error deleting interview session:', err);
+      return false;
+    }
+  };
+
   const handleViewProgress = (sessionId?: string) => {
     if (sessionId) {
       setSelectedSessionId(sessionId);
@@ -146,56 +200,74 @@ export default function App() {
     null;
 
   return (
-    <AppShell
-      currentTab={currentTab}
-      onTabChange={setCurrentTab}
-      isInterviewActive={currentTab === 'interviews'}
-    >
-      {currentTab === 'dashboard' && (
-        <Dashboard
-          candidate={activeCandidate}
-          interviewSpec={sampleInterviewSpec}
-          completedSessions={completedSessions}
-          onStartInterview={handleStartInterview}
-          onViewProgress={handleViewProgress}
-        />
+    <>
+      {toastMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-[#151518] border border-[#22C55E]/40 text-[#F4F4F5] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top duration-200">
+          <div className="w-8 h-8 rounded-lg bg-[#22C55E]/15 border border-[#22C55E]/30 flex items-center justify-center text-[#22C55E]">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <div className="text-xs font-semibold">{toastMessage}</div>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="text-[#71717A] hover:text-[#F4F4F5] ml-2 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       )}
 
-      {currentTab === 'interviews' && (
-        <InterviewScreen
-          initialState={interviewState}
-          candidate={activeCandidate}
-          settings={settings}
-          onExit={handleExitInterview}
-          onRestartSession={handleStartInterview}
-          onInterviewCompleted={handleInterviewCompleted}
-        />
-      )}
+      <AppShell
+        currentTab={currentTab}
+        onTabChange={setCurrentTab}
+        isInterviewActive={currentTab === 'interviews'}
+      >
+        {currentTab === 'dashboard' && (
+          <Dashboard
+            candidate={activeCandidate}
+            interviewSpec={sampleInterviewSpec}
+            completedSessions={completedSessions}
+            onStartInterview={handleStartInterview}
+            onViewProgress={handleViewProgress}
+          />
+        )}
 
-      {currentTab === 'candidates' && (
-        <CandidatesView
-          candidates={sampleCandidatesList}
-          onSelectCandidate={setActiveCandidate}
-          onStartInterviewForCandidate={handleStartInterviewForCandidate}
-        />
-      )}
+        {currentTab === 'interviews' && (
+          <InterviewScreen
+            initialState={interviewState}
+            candidate={activeCandidate}
+            settings={settings}
+            onExit={handleExitInterview}
+            onRestartSession={handleStartInterview}
+            onInterviewCompleted={handleInterviewCompleted}
+          />
+        )}
 
-      {currentTab === 'feedback' && (
-        <FeedbackView
-          feedback={activeFeedbackRecord ? activeFeedbackRecord.feedback : null}
-          completedSessions={completedSessions}
-          selectedSessionId={selectedSessionId || activeFeedbackRecord?.sessionId}
-          onSelectSession={setSelectedSessionId}
-          onReInterview={handleStartInterview}
-        />
-      )}
+        {currentTab === 'candidates' && (
+          <CandidatesView
+            candidates={sampleCandidatesList}
+            onSelectCandidate={setActiveCandidate}
+            onStartInterviewForCandidate={handleStartInterviewForCandidate}
+          />
+        )}
 
-      {currentTab === 'settings' && (
-        <SettingsView
-          settings={settings}
-          onUpdateSettings={handleUpdateSettings}
-        />
-      )}
-    </AppShell>
+        {currentTab === 'feedback' && (
+          <FeedbackView
+            feedback={activeFeedbackRecord ? activeFeedbackRecord.feedback : null}
+            completedSessions={completedSessions}
+            selectedSessionId={selectedSessionId || activeFeedbackRecord?.sessionId}
+            onSelectSession={setSelectedSessionId}
+            onReInterview={handleStartInterview}
+            onDeleteSession={handleDeleteSession}
+          />
+        )}
+
+        {currentTab === 'settings' && (
+          <SettingsView
+            settings={settings}
+            onUpdateSettings={handleUpdateSettings}
+          />
+        )}
+      </AppShell>
+    </>
   );
 }
