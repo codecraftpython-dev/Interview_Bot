@@ -1,0 +1,6 @@
+{
+  "name": "InterviewForge",
+  "description": "Where every interview is forged around you. An adaptive AI technical interviewer that builds personalized interviews around each candidate's learning journey.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
