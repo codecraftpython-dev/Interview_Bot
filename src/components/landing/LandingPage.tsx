@@ -581,7 +581,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <UseCaseCard
-            title="Cohort Students"
+            title="AI Engineering Students"
             desc="Turn your 31-day AI engineering course progress into realistic technical interview practice before job applications."
           />
           <UseCaseCard
@@ -757,7 +757,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#71717A] gap-4">
           <p>© {new Date().getFullYear()} InterviewForge. All rights reserved.</p>
-          <p>Enterprise AI Systems Engineering • Cohort #4</p>
+          <p>Enterprise AI Systems Engineering</p>
         </div>
       </footer>
     </div>

@@ -56,7 +56,7 @@ export const InterviewSetup: React.FC<InterviewSetupProps> = ({ spec, onStartInt
             Your Interview
           </h2>
           <p className="text-xs text-[#A1A1AA] mt-0.5">
-            Configured specifically for your cohort progress and probe requirements
+            Configured specifically for your curriculum progress and probe requirements
           </p>
         </div>
         <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-[#8B5CF6] px-3 py-1 rounded-full bg-[#8B5CF6]/10 border border-[#8B5CF6]/20">

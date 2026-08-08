@@ -149,7 +149,7 @@ export function createNewInterviewSession(
   const welcomeMessage: ChatMessage = {
     id: `m-init-${Date.now()}`,
     sender: 'ai',
-    text: `Hello ${candidate.name}. Welcome to your technical interview session (${settings.persona}).\n\nI have reviewed your cohort progression across your completed missions (${completedCount} of ${totalMissionsCount} missions completed). Today we will conduct a ${settings.interviewMode.replace('_', ' ')} assessment across AI systems architecture, vector retrieval, and agentic workflows.\n\n**Question 1 of ${totalQuestions}** (Day ${q1Spec.day} · ${q1Topic}):\n\n${q1Text}`,
+    text: `Hello ${candidate.name}. Welcome to your technical interview session (${settings.persona}).\n\nI have reviewed your curriculum progression across your completed missions (${completedCount} of ${totalMissionsCount} missions completed). Today we will conduct a ${settings.interviewMode.replace('_', ' ')} assessment across AI systems architecture, vector retrieval, and agentic workflows.\n\n**Question 1 of ${totalQuestions}** (Day ${q1Spec.day} · ${q1Topic}):\n\n${q1Text}`,
     timestamp: now,
     topicTag: q1Topic,
     followUpSuggestions: [

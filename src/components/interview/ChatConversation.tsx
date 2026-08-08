@@ -36,7 +36,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
       {/* Session Banner */}
       <div className="text-center py-3 my-2 border-b border-[#27272A]/60">
         <span className="text-[11px] font-mono text-[#71717A] uppercase tracking-wider bg-[#111113] px-3 py-1 rounded-full border border-[#27272A]">
-          Session ID: {sessionId || 'INT-2026-COHORT4'} · Adaptive AI Evaluator
+          Session ID: {sessionId || 'INT-2026-SESSION'} · Adaptive AI Evaluator
         </span>
       </div>
 

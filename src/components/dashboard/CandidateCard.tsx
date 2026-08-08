@@ -39,7 +39,7 @@ export const CandidateCard: React.FC<CandidateCardProps> = ({ candidate }) => {
             </p>
             <p className="text-[11px] text-[#71717A] mt-1 flex items-center gap-1">
               <BookOpen className="w-3 h-3 text-[#8B5CF6]" />
-              {candidate.cohortName}
+              31-Day AI Engineering Curriculum
             </p>
           </div>
         </div>

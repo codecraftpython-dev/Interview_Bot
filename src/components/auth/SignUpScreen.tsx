@@ -57,7 +57,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             ← Back to Home
           </button>
           <span className="text-[10px] text-[#8B5CF6] font-mono bg-[#8B5CF6]/10 px-2 py-0.5 rounded border border-[#8B5CF6]/30">
-            Cohort Access
+            Platform Access
           </span>
         </div>
 

@@ -89,7 +89,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </div>
             <span className="text-[10px] font-mono font-semibold text-[#8B5CF6] bg-[#8B5CF6]/10 px-2.5 py-1 rounded-full border border-[#8B5CF6]/30 flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" />
-              Cohort #4
+              Interview Agent
             </span>
           </div>
 
@@ -189,7 +189,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         {/* Footer Note */}
         <p className="text-center text-xs text-[#52525B]">
-          Demo Access · Enterprise AI Engineering Batch #4
+          Demo Access · Enterprise AI Engineering
         </p>
       </div>
     </div>

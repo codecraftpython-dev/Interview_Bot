@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </h1>
             <p className="text-[11px] text-[#A1A1AA] flex items-center gap-1 font-medium">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
-              Enterprise AI Cohort
+              Interview Platform
             </p>
           </div>
         </div>
@@ -98,16 +98,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#3F3F46] to-[#71717A] flex items-center justify-center text-xs font-semibold text-white border border-[#3F3F46]">
-              AC
+              IA
             </div>
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#22C55E] ring-2 ring-[#151518]" />
           </div>
           <div className="overflow-hidden min-w-0 flex-1">
             <div className="flex items-center gap-1">
-              <span className="text-xs font-medium text-[#F4F4F5] truncate">AI Cohort #4</span>
+              <span className="text-xs font-medium text-[#F4F4F5] truncate">Interview Agent</span>
               <ShieldCheck className="w-3.5 h-3.5 text-[#8B5CF6] shrink-0" />
             </div>
-            <p className="text-[11px] text-[#71717A] truncate">Evaluator Workspace</p>
+            <p className="text-[11px] text-[#71717A] truncate">Interview Workspace</p>
           </div>
         </div>
 

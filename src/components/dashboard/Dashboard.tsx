@@ -38,7 +38,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {/* Small Eyebrow */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8B5CF6]/10 border border-[#8B5CF6]/25 text-[#C4B5FD] text-xs font-semibold tracking-wider uppercase">
               <Sparkles className="w-3.5 h-3.5 text-[#8B5CF6]" />
-              AI COHORT • TECHNICAL INTERVIEW
+              AI TECHNICAL INTERVIEW
             </div>
 
             {/* Large Responsive Heading */}

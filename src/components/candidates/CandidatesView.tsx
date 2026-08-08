@@ -356,7 +356,7 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
               {signals.commitDays} <span className="text-xs font-normal text-[#71717A]">days</span>
             </div>
             <p className="text-[11px] text-[#A1A1AA] leading-tight">
-              Active learning days logged in the 31-day curriculum cohort.
+              Active learning days logged in the 31-day curriculum.
             </p>
           </div>
 
@@ -420,7 +420,7 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                   <span className="font-semibold text-[#F4F4F5] text-right max-w-[180px] truncate">{member.education}</span>
                 </div>
                 <div className="py-2.5 flex justify-between">
-                  <span className="text-[#A1A1AA]">Cohort Status</span>
+                  <span className="text-[#A1A1AA]">Status</span>
                   <span className="font-bold text-[#22C55E]">{member.status}</span>
                 </div>
               </div>
@@ -434,7 +434,7 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
               </h2>
 
               <p className="text-xs text-[#A1A1AA] leading-relaxed">
-                Distribution of candidate's recorded mission activities across the 8 cohort modules:
+                Distribution of candidate's recorded mission activities across the 8 curriculum modules:
               </p>
 
               <div className="space-y-3 pt-1">
@@ -621,7 +621,7 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                             <div>
                               <span className="text-[10px] font-mono uppercase text-[#71717A] block">Curriculum Module</span>
                               <span className="font-semibold text-[#F4F4F5]">
-                                {moduleSpec ? `${moduleSpec.n}. ${moduleSpec.title}` : 'General Cohort'}
+                                {moduleSpec ? `${moduleSpec.n}. ${moduleSpec.title}` : 'General Curriculum'}
                               </span>
                             </div>
                             <div>

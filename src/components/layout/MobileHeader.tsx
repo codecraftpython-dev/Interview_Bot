@@ -19,7 +19,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
     switch (tab) {
       case 'dashboard': return 'Dashboard';
       case 'interviews': return 'Interview Session';
-      case 'candidates': return 'Cohort Candidates';
+      case 'candidates': return 'Candidates';
       case 'feedback': return 'Evaluation Feedback';
       case 'settings': return 'Platform Settings';
     }

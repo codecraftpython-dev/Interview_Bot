@@ -70,7 +70,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               },
               {
                 id: 'Cohort Mentor & Guide' as const,
-                title: 'Cohort Mentor & Guide',
+                title: 'Engineering Mentor & Guide',
                 desc: 'Supportive, provides scaffolding when candidates get stuck',
               },
             ].map((p) => (
@@ -223,7 +223,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div>
                 <p className="font-semibold text-[#F4F4F5]">Auto-probe Skipped Curriculum Topics</p>
                 <p className="text-[11px] text-[#A1A1AA] mt-0.5">
-                  Actively generate scenario questions for candidate's skipped cohort missions
+                  Actively generate scenario questions for candidate's skipped curriculum missions
                 </p>
               </div>
               <input

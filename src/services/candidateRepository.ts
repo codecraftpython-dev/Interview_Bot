@@ -56,7 +56,7 @@ export function transformRecordToCandidate(record: CandidateRecord): Candidate {
     strongAreas,
     areasToProbe,
     skippedTopics,
-    lastActive: 'Active in Cohort',
+    lastActive: 'Active',
     status: 'Ready for Interview',
     rawRecord: record,
   };

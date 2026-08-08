@@ -78,7 +78,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   </div>
                   <div>
                     <h2 className="text-sm font-semibold text-[#F4F4F5]">InterviewForge</h2>
-                    <p className="text-[10px] text-[#A1A1AA]">AI Technical Cohort</p>
+                    <p className="text-[10px] text-[#A1A1AA]">Interview Platform</p>
                   </div>
                 </div>
                 <button
@@ -129,14 +129,14 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             <div className="pt-4 border-t border-[#27272A] space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-[#151518] border border-[#27272A]">
                 <div className="w-8 h-8 rounded-full bg-[#3F3F46] flex items-center justify-center text-xs font-semibold text-white">
-                  AC
+                  IA
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-white truncate flex items-center gap-1">
-                    AI Cohort #4
+                    Interview Agent
                     <ShieldCheck className="w-3.5 h-3.5 text-[#8B5CF6]" />
                   </p>
-                  <p className="text-[10px] text-[#A1A1AA] truncate">Enterprise Evaluation</p>
+                  <p className="text-[10px] text-[#A1A1AA] truncate">Interview Workspace</p>
                 </div>
               </div>
 
