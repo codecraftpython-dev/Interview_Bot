@@ -80,7 +80,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 onClick={() => updateField('persona', p.id)}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   formData.persona === p.id
-                    ? 'bg-[#8B5CF6]/15 border-[#8B5CF6] text-white shadow-sm'
+                    ? 'bg-[#8B5CF6]/15 border-[#8B5CF6] text-[#8B5CF6] dark:text-white font-semibold shadow-sm'
                     : 'bg-[#1A1A1F] border-[#27272A] text-[#A1A1AA] hover:text-[#F4F4F5]'
                 }`}
               >
@@ -122,7 +122,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 onClick={() => updateField('interviewMode', m.id)}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   formData.interviewMode === m.id
-                    ? 'bg-[#6366F1]/15 border-[#6366F1] text-white shadow-sm'
+                    ? 'bg-[#6366F1]/15 border-[#6366F1] text-[#6366F1] dark:text-white font-semibold shadow-sm'
                     : 'bg-[#1A1A1F] border-[#27272A] text-[#A1A1AA] hover:text-[#F4F4F5]'
                 }`}
               >

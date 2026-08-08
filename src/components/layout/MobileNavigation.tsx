@@ -9,9 +9,12 @@ import {
   X, 
   Sparkles, 
   ShieldCheck,
-  LogOut
+  LogOut,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { NavTab } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -30,6 +33,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   activeInterviewCount = 1,
   onLogout,
 }) => {
+  const { theme, setTheme } = useTheme();
+
   const navItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'interviews' as NavTab, label: 'Interviews', icon: MessageSquareCode, badge: activeInterviewCount ? 'Live' : undefined },
@@ -67,7 +72,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-            className="fixed top-0 bottom-0 left-0 w-[280px] max-w-[85vw] bg-[#111113] border-r border-[#27272A] flex flex-col justify-between shadow-2xl z-50 p-4"
+            className="fixed top-0 bottom-0 left-0 w-[280px] max-w-[85vw] bg-[#111113] border-r border-[#27272A] flex flex-col justify-between shadow-2xl z-50 p-4 overflow-y-auto"
           >
             <div>
               {/* Header inside drawer */}
@@ -123,10 +128,46 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   );
                 })}
               </nav>
+
+              {/* Theme Toggle Section */}
+              <div className="mt-4 p-3 rounded-xl bg-[#151518] border border-[#27272A] space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-[#71717A] uppercase tracking-wider px-0.5">
+                  <span>Appearance</span>
+                  <span className="capitalize text-[#8B5CF6] font-bold">{theme} Mode</span>
+                </div>
+                <div className="p-1 rounded-lg bg-[#111113] border border-[#27272A] flex items-center justify-between text-xs gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setTheme('light')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md font-medium transition-all min-h-[40px] ${
+                      theme === 'light'
+                        ? 'bg-[#8B5CF6] text-white shadow-sm'
+                        : 'text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-[#151518]'
+                    }`}
+                    aria-label="Switch to light mode"
+                  >
+                    <Sun className="w-4 h-4" />
+                    <span>Light</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTheme('dark')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md font-medium transition-all min-h-[40px] ${
+                      theme === 'dark'
+                        ? 'bg-[#8B5CF6] text-white shadow-sm'
+                        : 'text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-[#151518]'
+                    }`}
+                    aria-label="Switch to dark mode"
+                  >
+                    <Moon className="w-4 h-4" />
+                    <span>Dark</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Drawer Footer */}
-            <div className="pt-4 border-t border-[#27272A] space-y-3">
+            <div className="pt-4 border-t border-[#27272A] space-y-3 mt-4">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-[#151518] border border-[#27272A]">
                 <div className="w-8 h-8 rounded-full bg-[#3F3F46] flex items-center justify-center text-xs font-semibold text-white">
                   IA
@@ -156,3 +197,4 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     </AnimatePresence>
   );
 };
+

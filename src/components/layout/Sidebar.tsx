@@ -7,9 +7,12 @@ import {
   Settings, 
   Sparkles, 
   ShieldCheck,
-  LogOut
+  LogOut,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { NavTab } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -24,6 +27,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeInterviewCount = 1,
   onLogout,
 }) => {
+  const { theme, setTheme } = useTheme();
+
   const navItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'interviews' as NavTab, label: 'Interviews', icon: MessageSquareCode, badge: activeInterviewCount ? 'Live' : undefined },
@@ -93,8 +98,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
+      {/* Theme Toggle Section */}
+      <div className="px-3 py-2.5 mx-3 rounded-xl bg-[#151518] border border-[#27272A] space-y-1.5">
+        <div className="flex items-center justify-between text-[10px] font-semibold text-[#71717A] uppercase tracking-wider px-1">
+          <span>Appearance</span>
+          <span className="capitalize text-[#8B5CF6] font-bold">{theme} Mode</span>
+        </div>
+        <div className="p-1 rounded-lg bg-[#111113] border border-[#27272A] flex items-center justify-between text-xs gap-1">
+          <button
+            type="button"
+            onClick={() => setTheme('light')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md font-medium transition-all ${
+              theme === 'light'
+                ? 'bg-[#8B5CF6] text-white shadow-sm'
+                : 'text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-[#151518]'
+            }`}
+            aria-label="Switch to light mode"
+          >
+            <Sun className="w-3.5 h-3.5" />
+            <span>Light</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTheme('dark')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md font-medium transition-all ${
+              theme === 'dark'
+                ? 'bg-[#8B5CF6] text-white shadow-sm'
+                : 'text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-[#151518]'
+            }`}
+            aria-label="Switch to dark mode"
+          >
+            <Moon className="w-3.5 h-3.5" />
+            <span>Dark</span>
+          </button>
+        </div>
+      </div>
+
       {/* Bottom Profile Footer */}
-      <div className="p-3.5 m-3 rounded-xl bg-[#151518] border border-[#27272A] mt-auto space-y-2.5">
+      <div className="p-3.5 m-3 rounded-xl bg-[#151518] border border-[#27272A] space-y-2.5">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#3F3F46] to-[#71717A] flex items-center justify-center text-xs font-semibold text-white border border-[#3F3F46]">
@@ -124,3 +165,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </aside>
   );
 };
+
