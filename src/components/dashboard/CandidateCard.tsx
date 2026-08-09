@@ -45,12 +45,25 @@ export const CandidateCard: React.FC<CandidateCardProps> = ({ candidate }) => {
         </div>
 
         <div className="sm:text-right shrink-0 bg-[#1A1A1F] p-3 rounded-xl border border-[#27272A] sm:bg-transparent sm:p-0 sm:border-0">
-          <span className="text-[11px] uppercase tracking-wider text-[#71717A] font-semibold block">
+          <span 
+            className="text-[11px] uppercase tracking-wider text-[#71717A] font-semibold block"
+            style={{ paddingRight: '6px', paddingLeft: '4px' }}
+          >
             Readiness Index
           </span>
           <div className="flex items-baseline sm:justify-end gap-1.5 mt-0.5">
-            <span className="text-2xl font-bold text-[#F4F4F5]">{candidate.readinessScore}%</span>
-            <span className="text-xs text-[#22C55E] font-medium">High Confidence</span>
+            <span 
+              className="text-2xl font-bold text-[#F4F4F5]"
+              style={{ fontSize: '22px', textAlign: 'left', paddingLeft: '5px', paddingBottom: '4px' }}
+            >
+              {candidate.readinessScore}%
+            </span>
+            <span 
+              className="text-xs text-[#22C55E] font-medium"
+              style={{ paddingBottom: '2px', paddingRight: '4px' }}
+            >
+              High Confidence
+            </span>
           </div>
         </div>
       </div>
