@@ -1,7 +1,7 @@
 import React from 'react';
 import { Clock, Pause, Play, LogOut, Sliders } from 'lucide-react';
 import { Button } from '../common/Button';
-import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
+import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
 
 interface InterviewHeaderProps {
   currentQuestion: number;
@@ -51,17 +51,19 @@ export const InterviewHeader: React.FC<InterviewHeaderProps> = ({
           <div className="h-4 w-[1px] bg-[#27272A] hidden sm:block" />
 
           <div className="flex items-center gap-2 min-w-0">
-            <img 
-              src={appLogo} 
-              alt="IntervViewForge logo" 
-              className="w-7 h-7 rounded-lg object-cover shrink-0 shadow-sm" 
-              referrerPolicy="no-referrer"
-            />
+            <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 shadow-sm shadow-purple-500/20">
+              <img 
+                src={appLogo} 
+                alt="IntervViewForge logo" 
+                className="w-full h-full object-cover scale-[1.30]" 
+                referrerPolicy="no-referrer"
+              />
+            </div>
             <div className="min-w-0">
-              <h2 className="text-xs sm:text-sm font-semibold text-[#F4F4F5] truncate leading-tight">
+              <h2 className="text-xs sm:text-sm font-semibold text-[#0F172A] dark:text-[#F4F4F5] truncate leading-tight">
                 IntervViewForge
               </h2>
-              <p className="text-[10px] sm:text-[11px] text-[#A1A1AA] truncate font-medium flex items-center gap-1">
+              <p className="text-[10px] sm:text-[11px] text-[#475569] dark:text-[#A1A1AA] truncate font-medium flex items-center gap-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#8B5CF6]"></span>
                 <span className="truncate">{focusTopic}</span>
               </p>

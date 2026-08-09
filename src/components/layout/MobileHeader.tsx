@@ -1,7 +1,7 @@
 import React from 'react';
 import { Menu, X, Radio } from 'lucide-react';
 import { NavTab } from '../../types';
-import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
+import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
 
 interface MobileHeaderProps {
   currentTab: NavTab;
@@ -27,15 +27,17 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   };
 
   return (
-    <header className="md:hidden sticky top-0 z-40 w-full bg-[#111113]/95 backdrop-blur-md border-b border-[#27272A] px-4 py-3 flex items-center justify-between min-h-[56px]">
+    <header className="md:hidden sticky top-0 z-40 w-full bg-white/95 dark:bg-[#111113]/95 backdrop-blur-md border-b border-slate-200 dark:border-[#27272A] px-4 py-3 flex items-center justify-between min-h-[56px]">
       {/* Brand & Page Title */}
       <div className="flex items-center gap-2.5 min-w-0">
-        <img 
-          src={appLogo} 
-          alt="IntervViewForge logo" 
-          className="w-8 h-8 rounded-lg object-cover shrink-0 shadow-sm shadow-purple-500/20" 
-          referrerPolicy="no-referrer"
-        />
+        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm shadow-purple-500/20">
+          <img 
+            src={appLogo} 
+            alt="IntervViewForge logo" 
+            className="w-full h-full object-cover scale-[1.30]" 
+            referrerPolicy="no-referrer"
+          />
+        </div>
         <div className="min-w-0">
           <h1 className="text-xs font-semibold text-[#0F172A] dark:text-[#F4F4F5] truncate leading-tight">
             IntervViewForge

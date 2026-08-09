@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, Mail, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
-import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
+import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -71,12 +71,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         {/* Brand Title */}
         <div className="text-center space-y-3">
           <div className="flex justify-center mb-1">
-            <img 
-              src={appLogo} 
-              alt="IntervViewForge logo" 
-              className="w-12 h-12 rounded-2xl object-cover shrink-0 shadow-lg shadow-purple-500/25" 
-              referrerPolicy="no-referrer"
-            />
+            <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 shadow-lg shadow-purple-500/25">
+              <img 
+                src={appLogo} 
+                alt="IntervViewForge logo" 
+                className="w-full h-full object-cover scale-[1.30]" 
+                referrerPolicy="no-referrer"
+              />
+            </div>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
             IntervViewForge

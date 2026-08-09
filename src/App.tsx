@@ -11,6 +11,7 @@ import { InterviewScreen } from './components/interview/InterviewScreen';
 import { CandidatesView } from './components/candidates/CandidatesView';
 import { FeedbackView } from './components/feedback/FeedbackView';
 import { SettingsView } from './components/settings/SettingsView';
+import { AssistantChat } from './components/assistant/AssistantChat';
 import { 
   sampleCandidate, 
   sampleCandidatesList, 
@@ -268,6 +269,9 @@ export default function App() {
           />
         )}
       </AppShell>
+
+      {/* Floating Gemini Assistant Chatbot */}
+      <AssistantChat currentTab={currentTab} activeCandidate={activeCandidate} />
     </>
   );
 }

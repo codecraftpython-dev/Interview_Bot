@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { NavTab } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
-import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
+import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -40,21 +40,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside 
-      className="hidden md:flex flex-col w-[250px] shrink-0 h-screen bg-[#111113] border-r border-[#27272A] select-none z-30 overflow-hidden"
+      className="hidden md:flex flex-col w-[250px] shrink-0 h-screen bg-white dark:bg-[#111113] border-r border-slate-200 dark:border-[#27272A] select-none z-30 overflow-hidden"
       aria-label="Desktop Sidebar Navigation"
     >
       {/* Brand Header */}
-      <div className="p-5 border-b border-[#27272A]/80">
+      <div className="p-5 border-b border-slate-200 dark:border-[#27272A]/80">
         <button 
           onClick={() => onTabChange('dashboard')}
           className="flex items-center gap-3 text-left w-full focus:outline-none group cursor-pointer"
         >
-          <img 
-            src={appLogo} 
-            alt="IntervViewForge logo" 
-            className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform" 
-            referrerPolicy="no-referrer"
-          />
+          <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
+            <img 
+              src={appLogo} 
+              alt="IntervViewForge logo" 
+              className="w-full h-full object-cover scale-[1.30]" 
+              referrerPolicy="no-referrer"
+            />
+          </div>
           <div className="overflow-hidden">
             <h1 className="text-sm font-bold text-[#0F172A] dark:text-[#F4F4F5] tracking-tight leading-snug truncate">
               IntervViewForge
@@ -108,12 +110,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* Theme Toggle Section */}
-      <div className="px-3 py-2.5 mx-3 rounded-xl bg-[#151518] border border-[#27272A] space-y-1.5">
+      <div className="px-3 py-2.5 mx-3 rounded-xl bg-slate-50 dark:bg-[#151518] border border-slate-200 dark:border-[#27272A] space-y-1.5">
         <div className="flex items-center justify-between text-[10px] font-bold text-[#64748B] dark:text-[#71717A] uppercase tracking-wider px-1">
           <span>Appearance</span>
           <span className="capitalize text-[#7C3AED] dark:text-[#8B5CF6] font-extrabold">{theme} Mode</span>
         </div>
-        <div className="p-1 rounded-lg bg-[#111113] border border-[#27272A] flex items-center justify-between text-xs gap-1">
+        <div className="p-1 rounded-lg bg-white dark:bg-[#111113] border border-slate-200 dark:border-[#27272A] flex items-center justify-between text-xs gap-1">
           <button
             type="button"
             onClick={() => setTheme('light')}
@@ -144,13 +146,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom Profile Footer */}
-      <div className="p-3.5 m-3 rounded-xl bg-[#151518] border border-[#27272A] space-y-2.5">
+      <div className="p-3.5 m-3 rounded-xl bg-slate-50 dark:bg-[#151518] border border-slate-200 dark:border-[#27272A] space-y-2.5">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#3F3F46] to-[#71717A] flex items-center justify-center text-xs font-semibold text-white border border-[#3F3F46]">
               IA
             </div>
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#22C55E] ring-2 ring-[#151518]" />
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#22C55E] ring-2 ring-white dark:ring-[#151518]" />
           </div>
           <div className="overflow-hidden min-w-0 flex-1">
             <div className="flex items-center gap-1">
@@ -164,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {onLogout && (
           <button
             onClick={onLogout}
-            className="w-full pt-2 border-t border-[#27272A] flex items-center gap-2 text-xs font-semibold text-[#334155] dark:text-[#A1A1AA] hover:text-[#0F172A] dark:hover:text-[#F4F4F5] transition-colors"
+            className="w-full pt-2 border-t border-slate-200 dark:border-[#27272A] flex items-center gap-2 text-xs font-semibold text-[#334155] dark:text-[#A1A1AA] hover:text-[#0F172A] dark:hover:text-[#F4F4F5] transition-colors"
           >
             <LogOut className="w-3.5 h-3.5 text-[#64748B] dark:text-[#71717A]" />
             <span>Sign Out</span>

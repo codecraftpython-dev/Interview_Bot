@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
+import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -104,12 +104,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-2.5 group text-left focus:outline-none"
           >
-            <img 
-              src={appLogo} 
-              alt="IntervViewForge logo" 
-              className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform" 
-              referrerPolicy="no-referrer"
-            />
+            <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
+              <img 
+                src={appLogo} 
+                alt="IntervViewForge logo" 
+                className="w-full h-full object-cover scale-[1.30]" 
+                referrerPolicy="no-referrer"
+              />
+            </div>
             <div>
               <span className="text-base font-bold text-[#F4F4F5] tracking-tight group-hover:text-white transition-colors block">
                 IntervViewForge
@@ -730,12 +732,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-[#27272A]/80">
           <div className="space-y-3 md:col-span-2">
             <div className="flex items-center gap-2">
-              <img 
-                src={appLogo} 
-                alt="IntervViewForge logo" 
-                className="w-7 h-7 rounded-lg object-cover shrink-0 shadow-sm" 
-                referrerPolicy="no-referrer"
-              />
+              <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 shadow-sm shadow-purple-500/20">
+                <img 
+                  src={appLogo} 
+                  alt="IntervViewForge logo" 
+                  className="w-full h-full object-cover scale-[1.30]" 
+                  referrerPolicy="no-referrer"
+                />
+              </div>
               <span className="text-base font-bold text-[#F4F4F5]">IntervViewForge</span>
             </div>
             <p className="text-xs text-[#A1A1AA] max-w-sm leading-relaxed">

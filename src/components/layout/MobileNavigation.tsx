@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { NavTab } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
-import appLogo from '../../assets/images/app_logo_1786193586158.jpg';
+import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -73,18 +73,20 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-            className="fixed top-0 bottom-0 left-0 w-[280px] max-w-[85vw] bg-[#111113] border-r border-[#27272A] flex flex-col justify-between shadow-2xl z-50 p-4 overflow-y-auto"
+            className="fixed top-0 bottom-0 left-0 w-[280px] max-w-[85vw] bg-white dark:bg-[#111113] border-r border-slate-200 dark:border-[#27272A] flex flex-col justify-between shadow-2xl z-50 p-4 overflow-y-auto"
           >
             <div>
               {/* Header inside drawer */}
-              <div className="flex items-center justify-between pb-4 border-b border-[#27272A] mb-4">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-[#27272A] mb-4">
                 <div className="flex items-center gap-2.5">
-                  <img 
-                    src={appLogo} 
-                    alt="IntervViewForge logo" 
-                    className="w-8 h-8 rounded-lg object-cover shrink-0 shadow-sm shadow-purple-500/20" 
-                    referrerPolicy="no-referrer"
-                  />
+                  <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm shadow-purple-500/20">
+                    <img 
+                      src={appLogo} 
+                      alt="IntervViewForge logo" 
+                      className="w-full h-full object-cover scale-[1.30]" 
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
                   <div>
                     <h2 className="text-sm font-bold text-[#0F172A] dark:text-[#F4F4F5]">IntervViewForge</h2>
                     <p className="text-[10px] text-[#475569] dark:text-[#A1A1AA] font-medium">Interview Platform</p>
