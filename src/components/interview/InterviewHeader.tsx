@@ -1,7 +1,7 @@
 import React from 'react';
 import { Clock, Pause, Play, LogOut, Sliders } from 'lucide-react';
 import { Button } from '../common/Button';
-import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
+import appLogo from '../../assets/images/regenerated_image_1786262072506.png';
 
 interface InterviewHeaderProps {
   currentQuestion: number;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Menu, X, Radio } from 'lucide-react';
 import { NavTab } from '../../types';
-import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
+import appLogo from '../../assets/images/regenerated_image_1786262072506.png';
 
 interface MobileHeaderProps {
   currentTab: NavTab;

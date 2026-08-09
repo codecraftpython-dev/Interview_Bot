@@ -737,31 +737,36 @@ InterViewForge uses the technologies and architecture defined in the project sou
 
 ---
 
-# 📂 Project Structure
+## 📁 Project Structure
 
-A simplified structure of the application can be represented as:
+```text
+IntervViewForge/
+│
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── context/
+│   ├── data/
+│   ├── services/
+│   ├── utils/
+│   │
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   ├── types.ts
+│   └── vite-env.d.ts
+│
+├── .env.example
+├── .gitignore
+├── Challenge.md
+├── index.html
+├── metadata.json
+├── package.json
+├── README.md
+├── server.ts
+├── tsconfig.json
+└── vite.config.ts
 
-    project/
-    │
-    ├── src/
-    │   ├── components/
-    │   │   ├── dashboard/
-    │   │   ├── interview/
-    │   │   ├── candidates/
-    │   │   ├── feedback/
-    │   │   ├── settings/
-    │   │   └── layout/
-    │   │
-    │   ├── assets/
-    │   │
-    │   └── ...
-    │
-    ├── public/
-    │
-    ├── package.json
-    ├── README.md
-    ├── PROMPTS.md
-    └── ...
 
 The exact structure may vary depending on the final source implementation.
 
