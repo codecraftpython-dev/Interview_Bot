@@ -740,7 +740,7 @@ InterViewForge uses the technologies and architecture defined in the project sou
 ## 📁 Project Structure
 
 ```text
-IntervViewForge/
+InterViewForge/
 │
 ├── src/
 │   ├── assets/
