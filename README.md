@@ -766,7 +766,7 @@ IntervViewForge/
 ├── server.ts
 ├── tsconfig.json
 └── vite.config.ts
-
+```
 
 The exact structure may vary depending on the final source implementation.
 
