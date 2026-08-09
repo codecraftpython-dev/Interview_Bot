@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, Mail, User, ArrowRight, AlertCircle, ShieldCheck, Briefcase } from 'lucide-react';
-import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
+import appLogo from '../../assets/images/regenerated_image_1786262072506.png';
 
 interface SignUpScreenProps {
   onSignUpSuccess: () => void;

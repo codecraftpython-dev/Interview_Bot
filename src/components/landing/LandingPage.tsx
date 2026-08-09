@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
+import appLogo from '../../assets/images/regenerated_image_1786262072506.png';
 import { 
   Sparkles, 
   ArrowRight, 

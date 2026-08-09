@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, RotateCcw, Send, Bot, User, ArrowRight, Sparkles } from 'lucide-react';
 import { NavTab, Candidate } from '../../types';
-import assistantBotImage from '../../assets/images/regenerated_image_1786251258890.png';
+import assistantBotImage from '../../assets/images/regenerated_image_1786262072506.png';
 
 interface Message {
   id: string;

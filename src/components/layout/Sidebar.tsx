@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { NavTab } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
-import appLogo from '../../assets/images/regenerated_image_1786251258890.png';
+import appLogo from '../../assets/images/regenerated_image_1786262072506.png';
 
 interface SidebarProps {
   currentTab: NavTab;
